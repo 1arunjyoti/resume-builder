@@ -7,31 +7,7 @@ import type { Resume } from "@/db";
 import { useResumeStore } from "@/store/useResumeStore";
 import { useEffect } from "react";
 
-type TemplateType = "ats" | "creative" | "modern" | "professional" | "elegant";
-
-const TEMPLATES: { id: TemplateType; name: string; description: string }[] = [
-  {
-    id: "ats",
-    name: "ATS Scanner",
-    description: "Clean, single-column, ATS-friendly",
-  },
-  { id: "creative", name: "Creative", description: "Two-column with sidebar" },
-  {
-    id: "modern",
-    name: "Modern",
-    description: "Minimalist, typography-focused",
-  },
-  {
-    id: "professional",
-    name: "Professional",
-    description: "Traditional serif, executive style",
-  },
-  {
-    id: "elegant",
-    name: "Elegant",
-    description: "Sophisticated with full-width banner",
-  },
-];
+import { TEMPLATES, type TemplateType } from "@/lib/constants";
 
 // Dynamically import PDF generation to avoid SSR issues
 const generatePDFAsync = async (

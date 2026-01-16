@@ -142,5 +142,38 @@ export function generateMockResume(): Omit<Resume, "id" | "meta"> {
         url: "https://finance.alexjohnson.dev",
       },
     ],
+    certificates: [
+      {
+        id: uuidv4(),
+        name: "AWS Certified Solutions Architect",
+        issuer: "Amazon Web Services",
+        date: "2023-01",
+        url: "https://aws.amazon.com",
+        summary: "Validated expertise in designing distributed systems on AWS.",
+      },
+    ],
+    languages: [
+      {
+        id: uuidv4(),
+        language: "English",
+        fluency: "Native speaker",
+      },
+      {
+        id: uuidv4(),
+        language: "Spanish",
+        fluency: "Intermediate",
+      },
+    ],
+    interests: [
+      {
+        id: uuidv4(),
+        name: "Open Source",
+        keywords: ["Contributing", "Mentoring"],
+      },
+    ],
+    publications: [],
+    awards: [],
+    references: [],
+    custom: [],
   };
 }

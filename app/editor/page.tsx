@@ -10,27 +10,43 @@ import {
   EducationForm,
   SkillsForm,
   ProjectsForm,
+  CertificatesForm,
+  LanguagesForm,
+  InterestsForm,
+  PublicationsForm,
+  AwardsForm,
+  ReferencesForm,
+  CustomForm,
 } from "@/components/forms";
 import { PDFPreview } from "@/components/preview/PDFPreview";
 import { JobMatcher } from "@/components/JobMatcher";
 import { useResumeStore } from "@/store/useResumeStore";
 import { generateMockResume } from "@/lib/mockData";
-import { LayoutSettingsToolbar } from "@/components/LayoutSettingsToolbar";
+import { DesignSettings } from "@/components/DesignSettings";
+
 import {
   User,
   Briefcase,
   GraduationCap,
   Wrench,
   FolderKanban,
+  Award,
+  Languages,
+  Heart,
+  BookOpen,
+  Trophy,
+  Users,
+  Layers,
   Save,
   FileDown,
   Loader2,
   ArrowLeft,
-  FileText,
   Target,
   Menu,
   RotateCcw,
   Wand2,
+  Palette,
+  PenLine,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -60,6 +76,7 @@ function EditorContent() {
 
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("basics");
+  const [view, setView] = useState<"content" | "customize">("content");
 
   // Load or create resume on mount
   useEffect(() => {
@@ -147,12 +164,18 @@ function EditorContent() {
     { id: "education", label: "Education", icon: GraduationCap },
     { id: "skills", label: "Skills", icon: Wrench },
     { id: "projects", label: "Projects", icon: FolderKanban },
-    { id: "preview", label: "Preview", icon: FileText },
+    { id: "certificates", label: "Certificates", icon: Award },
+    { id: "languages", label: "Languages", icon: Languages },
+    { id: "interests", label: "Interests", icon: Heart },
+    { id: "publications", label: "Publications", icon: BookOpen },
+    { id: "awards", label: "Awards", icon: Trophy },
+    { id: "references", label: "References", icon: Users },
+    { id: "custom", label: "Custom", icon: Layers },
     { id: "match", label: "Job Match", icon: Target },
   ];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen overflow-hidden bg-background flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
@@ -182,17 +205,38 @@ function EditorContent() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {/* Desktop Actions */}
-            <div className="hidden sm:flex items-center gap-2">
+            {/* View Toggle */}
+            <div className="hidden sm:flex items-center gap-1 bg-muted p-1 rounded-lg mr-2 border">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleReset}
-                className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                onClick={() => setView("content")}
+                className={`gap-2 h-8 rounded-md transition-all ${
+                  view === "content"
+                    ? "bg-background text-foreground shadow-sm hover:bg-background"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Reset
+                <PenLine className="h-4 w-4" />
+                Content
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setView("customize")}
+                className={`gap-2 h-8 rounded-md transition-all ${
+                  view === "customize"
+                    ? "bg-background text-foreground shadow-sm hover:bg-background"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Palette className="h-4 w-4" />
+                Customize
+              </Button>
+            </div>
+
+            {/* Desktop Actions */}
+            <div className="hidden sm:flex items-center gap-2">
               {process.env.NODE_ENV === "development" && (
                 <Button
                   variant="outline"
@@ -200,26 +244,48 @@ function EditorContent() {
                   onClick={handleFillSampleData}
                   className="text-primary border-primary/50 hover:bg-primary/10"
                 >
-                  <Wand2 className="h-4 w-4 mr-2" />
+                  <Wand2 className="h-4 w-4" />
                   Fill Sample
                 </Button>
               )}
               <Button variant="outline" size="sm" onClick={handleExportJSON}>
-                <FileDown className="h-4 w-4 mr-2" />
+                <FileDown className="h-4 w-4" />
                 Export JSON
               </Button>
               <Button size="sm" onClick={handleSave} disabled={isSaving}>
                 {isSaving ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
-                  <Save className="h-4 w-4 mr-2" />
+                  <Save className="h-4 w-4" />
                 )}
                 Save
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleReset}
+                className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Reset
               </Button>
             </div>
 
             {/* Mobile Actions */}
             <div className="flex sm:hidden items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() =>
+                  setView(view === "content" ? "customize" : "content")
+                }
+              >
+                {view === "content" ? (
+                  <Palette className="h-5 w-5" />
+                ) : (
+                  <PenLine className="h-5 w-5" />
+                )}
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
@@ -262,6 +328,26 @@ function EditorContent() {
                       <RotateCcw className="h-4 w-4 mr-2" />
                       Reset All Data
                     </Button>
+                    <div className="h-px bg-border my-2" />
+                    <p className="text-xs text-muted-foreground font-medium px-2">
+                      View Mode
+                    </p>
+                    <Button
+                      variant={view === "content" ? "secondary" : "ghost"}
+                      className="justify-start"
+                      onClick={() => setView("content")}
+                    >
+                      <PenLine className="h-4 w-4 mr-2" />
+                      Content Editor
+                    </Button>
+                    <Button
+                      variant={view === "customize" ? "secondary" : "ghost"}
+                      className="justify-start"
+                      onClick={() => setView("customize")}
+                    >
+                      <Palette className="h-4 w-4 mr-2" />
+                      Customize Design
+                    </Button>
                     {/* Add more mobile menu items here if needed */}
                   </div>
                 </SheetContent>
@@ -271,98 +357,193 @@ function EditorContent() {
         </div>
       </header>
 
-      {/* Layout Toolbar */}
-      {currentResume && <LayoutSettingsToolbar />}
-
       {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-6 md:py-8 max-w-5xl">
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-6"
+      <main className="flex-1 container mx-auto px-4 max-w-8xl grid grid-cols-1 lg:grid-cols-2 gap-8 overflow-hidden">
+        {/* Left Side - Editor Controls */}
+        <div className="min-h-0 overflow-hidden flex flex-col border-r bg-background/50">
+          {view === "customize" ? (
+            <div className="h-full overflow-y-auto p-4 md:p-6 scrollbar-hide">
+              <DesignSettings />
+            </div>
+          ) : (
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              orientation="vertical"
+              className="flex-row h-full"
+            >
+              {/* Vertical Sidebar */}
+              <div className="w-12.5 md:w-40 lg:w-45 border-r h-full overflow-y-auto bg-muted/10 shrink-0">
+                <TabsList className="bg-transparent flex flex-col items-stretch justify-start p-2 gap-1 h-auto w-full rounded-none">
+                  {tabs.map((tab) => (
+                    <TabsTrigger
+                      key={tab.id}
+                      value={tab.id}
+                      className="justify-center md:justify-start gap-3 px-2 md:px-3 py-2.5 h-auto text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all w-full mb-1"
+                    >
+                      <tab.icon className="h-4 w-4 shrink-0" />
+                      <span className="hidden md:block truncate">{tab.label}</span>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+
+              {/* Content Area */}
+              <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide bg-background">
+                <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-6 min-h-125 pb-20">
+                  <TabsContent
+                    value="basics"
+                    className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
+                  >
+                    <BasicsForm
+                      data={currentResume.basics}
+                      onChange={(basics) => updateCurrentResume({ basics })}
+                    />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="work"
+                    className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
+                  >
+                    <WorkForm
+                      data={currentResume.work}
+                      onChange={(work) => updateCurrentResume({ work })}
+                    />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="education"
+                    className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
+                  >
+                    <EducationForm
+                      data={currentResume.education}
+                      onChange={(education) => updateCurrentResume({ education })}
+                    />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="skills"
+                    className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
+                  >
+                    <SkillsForm
+                      data={currentResume.skills}
+                      onChange={(skills) => updateCurrentResume({ skills })}
+                    />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="projects"
+                    className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
+                  >
+                    <ProjectsForm
+                      data={currentResume.projects}
+                      onChange={(projects) => updateCurrentResume({ projects })}
+                    />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="match"
+                    className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
+                  >
+                    <JobMatcher resume={currentResume} />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="certificates"
+                    className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
+                  >
+                    <CertificatesForm
+                      data={currentResume.certificates}
+                      onChange={(certificates) =>
+                        updateCurrentResume({ certificates })
+                      }
+                    />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="languages"
+                    className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
+                  >
+                    <LanguagesForm
+                      data={currentResume.languages}
+                      onChange={(languages) => updateCurrentResume({ languages })}
+                    />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="interests"
+                    className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
+                  >
+                    <InterestsForm
+                      data={currentResume.interests}
+                      onChange={(interests) => updateCurrentResume({ interests })}
+                    />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="publications"
+                    className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
+                  >
+                    <PublicationsForm
+                      data={currentResume.publications}
+                      onChange={(publications) =>
+                        updateCurrentResume({ publications })
+                      }
+                    />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="awards"
+                    className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
+                  >
+                    <AwardsForm
+                      data={currentResume.awards}
+                      onChange={(awards) => updateCurrentResume({ awards })}
+                    />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="references"
+                    className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
+                  >
+                    <ReferencesForm
+                      data={currentResume.references}
+                      onChange={(references) =>
+                        updateCurrentResume({ references })
+                      }
+                    />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="custom"
+                    className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
+                  >
+                    <CustomForm
+                      data={currentResume.custom}
+                      onChange={(custom) => updateCurrentResume({ custom })}
+                    />
+                  </TabsContent>
+                </div>
+              </div>
+            </Tabs>
+          )}
+        </div>
+
+        {/* Right Side - Live Preview */}
+        <div
+          className={`lg:block ${
+            view === "customize" ? "block" : "hidden"
+          } overflow-y-auto py-6 md:py-8 pl-1`}
         >
-          {/* Scrollable Tabs List */}
-          <div className="sticky top-16 z-40 -mx-4 px-4 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b pb-2 sm:static sm:bg-transparent sm:border-0 sm:p-0 sm:mx-0 overflow-x-auto scrollbar-hide">
-            <TabsList className="w-full sm:w-auto inline-flex h-auto p-1 bg-muted/50 rounded-lg">
-              {tabs.map((tab) => (
-                <TabsTrigger
-                  key={tab.id}
-                  value={tab.id}
-                  className="shrink-0 gap-2 py-2 px-3 sm:px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
-                >
-                  <tab.icon className="h-4 w-4" />
-                  <span className="hidden md:inline">{tab.label}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
+          <div className="min-h-full">
+            <div className="mb-4 flex items-center justify-between lg:hidden">
+              <h3 className="font-medium text-muted-foreground">
+                Live Preview
+              </h3>
+            </div>
+            <PDFPreview resume={currentResume} />
           </div>
-
-          <div className="min-h-[500px]">
-            <TabsContent
-              value="basics"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
-            >
-              <BasicsForm
-                data={currentResume.basics}
-                onChange={(basics) => updateCurrentResume({ basics })}
-              />
-            </TabsContent>
-
-            <TabsContent
-              value="work"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
-            >
-              <WorkForm
-                data={currentResume.work}
-                onChange={(work) => updateCurrentResume({ work })}
-              />
-            </TabsContent>
-
-            <TabsContent
-              value="education"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
-            >
-              <EducationForm
-                data={currentResume.education}
-                onChange={(education) => updateCurrentResume({ education })}
-              />
-            </TabsContent>
-
-            <TabsContent
-              value="skills"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
-            >
-              <SkillsForm
-                data={currentResume.skills}
-                onChange={(skills) => updateCurrentResume({ skills })}
-              />
-            </TabsContent>
-
-            <TabsContent
-              value="projects"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
-            >
-              <ProjectsForm
-                data={currentResume.projects}
-                onChange={(projects) => updateCurrentResume({ projects })}
-              />
-            </TabsContent>
-
-            <TabsContent
-              value="preview"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
-            >
-              <PDFPreview resume={currentResume} />
-            </TabsContent>
-
-            <TabsContent
-              value="match"
-              className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-300"
-            >
-              <JobMatcher resume={currentResume} />
-            </TabsContent>
-          </div>
-        </Tabs>
+        </div>
       </main>
     </div>
   );
@@ -372,7 +553,7 @@ export default function EditorPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="h-screen flex items-center justify-center bg-background">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       }

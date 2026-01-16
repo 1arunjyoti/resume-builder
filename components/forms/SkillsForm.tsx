@@ -3,11 +3,11 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, Wrench, X } from "lucide-react";
+import { Wrench, Plus, Trash2, X } from "lucide-react";
 import type { Skill } from "@/db";
 import { v4 as uuidv4 } from "uuid";
 import { useState } from "react";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 
 interface SkillsFormProps {
   data: Skill[];
@@ -95,65 +95,71 @@ export function SkillsForm({ data, onChange }: SkillsFormProps) {
       </div>
 
       {data.length === 0 && (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            No skills added yet. Click &quot;Add Skill&quot; to get started.
-          </CardContent>
-        </Card>
+        <div className="text-center text-muted-foreground py-8 border-2 border-dashed border-muted rounded-lg">
+          No skills added yet. Click &quot;Add Skill&quot; to get started.
+        </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {data.map((skill) => (
-          <Card key={skill.id}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center justify-between">
+          <CollapsibleSection
+            key={skill.id}
+            title={
+              <div
+                className="flex-1 mr-4"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
                 <Input
-                  placeholder="Skill Category (e.g., Programming)"
                   value={skill.name}
                   onChange={(e) =>
                     updateSkill(skill.id, "name", e.target.value)
                   }
-                  className="font-semibold border-0 p-0 h-auto focus-visible:ring-0 text-base"
+                  placeholder="Skill Category (e.g. Languages)"
+                  className="h-8"
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="text-destructive hover:text-destructive shrink-0"
-                  onClick={() => removeSkill(skill.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+              </div>
+            }
+            defaultOpen={true}
+            actions={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-destructive hover:text-destructive h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeSkill(skill.id);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            }
+          >
+            <div className="space-y-3">
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">
-                  Proficiency Level
-                </Label>
+                <Label>Proficiency Level</Label>
                 <Input
-                  placeholder="Expert, Advanced, Intermediate..."
                   value={skill.level}
                   onChange={(e) =>
                     updateSkill(skill.id, "level", e.target.value)
                   }
+                  placeholder="e.g. Native, Advanced"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">
-                  Technologies / Keywords
-                </Label>
-                <div className="flex flex-wrap gap-2 min-h-[32px]">
-                  {skill.keywords.map((keyword, index) => (
+                <Label className="text-sm">Keywords / Skills</Label>
+                <div className="flex flex-wrap gap-2 min-h-8">
+                  {skill.keywords.map((keyword, kIndex) => (
                     <span
-                      key={index}
+                      key={kIndex}
                       className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-primary/10 text-primary rounded-md"
                     >
                       {keyword}
                       <button
                         type="button"
-                        onClick={() => removeKeyword(skill.id, index)}
+                        onClick={() => removeKeyword(skill.id, kIndex)}
                         className="hover:text-destructive"
                       >
                         <X className="h-3 w-3" />
@@ -163,7 +169,7 @@ export function SkillsForm({ data, onChange }: SkillsFormProps) {
                 </div>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Add keyword..."
+                    placeholder="Add skill..."
                     value={newKeyword[skill.id] || ""}
                     onChange={(e) =>
                       setNewKeyword({
@@ -184,8 +190,8 @@ export function SkillsForm({ data, onChange }: SkillsFormProps) {
                   </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CollapsibleSection>
         ))}
       </div>
     </div>

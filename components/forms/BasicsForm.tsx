@@ -1,14 +1,16 @@
 "use client";
 
+import Image from "next/image";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Trash2, Upload, User } from "lucide-react";
 import type { ResumeBasics } from "@/db";
 import { useRef, useState } from "react";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 
 interface BasicsFormProps {
   data: ResumeBasics;
@@ -18,6 +20,15 @@ interface BasicsFormProps {
 export function BasicsForm({ data, onChange }: BasicsFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const SOCIAL_NETWORKS = [
+    "LinkedIn",
+    "GitHub",
+    "Twitter",
+    "Portfolio",
+    "Instagram",
+    "Facebook",
+  ];
 
   const updateField = <K extends keyof ResumeBasics>(
     field: K,
@@ -48,10 +59,25 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
     }
   };
 
-  const addProfile = () => {
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    updateField("image", undefined);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const addProfile = (network?: string) => {
     onChange({
       ...data,
-      profiles: [...data.profiles, { network: "", username: "", url: "" }],
+      profiles: [
+        ...data.profiles,
+        {
+          network: network || "",
+          username: "",
+          url: "",
+        },
+      ],
     });
   };
 
@@ -62,73 +88,103 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
     });
   };
 
+  const detectNetworkFromUrl = (url: string): string => {
+    const lowerUrl = url.toLowerCase();
+    if (lowerUrl.includes("linkedin.com")) return "LinkedIn";
+    if (lowerUrl.includes("github.com")) return "GitHub";
+    if (lowerUrl.includes("twitter.com") || lowerUrl.includes("x.com"))
+      return "Twitter";
+    if (lowerUrl.includes("instagram.com")) return "Instagram";
+    if (lowerUrl.includes("facebook.com")) return "Facebook";
+    return "";
+  };
+
   const updateProfile = (
     index: number,
     field: "network" | "username" | "url",
     value: string
   ) => {
     const newProfiles = [...data.profiles];
-    newProfiles[index] = { ...newProfiles[index], [field]: value };
+    const updatedProfile = { ...newProfiles[index], [field]: value };
+
+    if (field === "url" && !updatedProfile.network) {
+      const detected = detectNetworkFromUrl(value);
+      if (detected) {
+        updatedProfile.network = detected;
+      }
+    }
+
+    newProfiles[index] = updatedProfile;
     onChange({ ...data, profiles: newProfiles });
   };
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold flex items-center gap-2">
+          <User className="h-5 w-5" />
+          Basics
+        </h2>
+      </div>
+
       {/* Profile Photo */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Profile Photo
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <div className="relative h-24 w-24 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/25">
-              {imagePreview || data.image ? (
-                <img
-                  src={
-                    imagePreview ||
-                    (data.image ? URL.createObjectURL(data.image) : "")
-                  }
-                  alt="Profile"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <User className="h-10 w-10 text-muted-foreground" />
-              )}
-            </div>
-            <div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleImageUpload}
+      <CollapsibleSection title="Profile Photo" icon={User} defaultOpen={true}>
+        <div className="flex items-center gap-4">
+          <div className="relative h-24 w-24 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/25">
+            {imagePreview || data.image ? (
+              <Image
+                src={
+                  imagePreview ||
+                  (data.image ? URL.createObjectURL(data.image) : "")
+                }
+                alt="Profile"
+                fill
+                className="object-cover"
+                unoptimized
               />
+            ) : (
+              <User className="h-10 w-10 text-muted-foreground" />
+            )}
+          </div>
+          <div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleImageUpload}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Photo
+            </Button>
+            {(imagePreview || data.image) && (
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                onClick={() => fileInputRef.current?.click()}
+                className="text-destructive hover:text-destructive ml-2"
+                onClick={handleRemoveImage}
               >
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Photo
+                <Trash2 className="h-4 w-4 mr-2" />
+                Remove
               </Button>
-              <p className="text-xs text-muted-foreground mt-1">
-                PNG, JPG up to 2MB
-              </p>
-            </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              PNG, JPG up to 2MB
+            </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </CollapsibleSection>
 
       {/* Personal Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Personal Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <CollapsibleSection title="Personal Information" defaultOpen={true}>
+        <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
@@ -166,10 +222,13 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
               <Input
                 id="phone"
                 type="tel"
-                placeholder="+1 (555) 123-4567"
+                placeholder="+1 234 567 8900"
                 value={data.phone}
                 onChange={(e) => updateField("phone", e.target.value)}
               />
+              <p className="text-[10px] text-muted-foreground">
+                Include country code (e.g. +91)
+              </p>
             </div>
           </div>
 
@@ -206,35 +265,55 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="summary">Professional Summary</Label>
-            <Textarea
-              id="summary"
-              placeholder="A brief summary of your professional background and career objectives..."
-              className="min-h-[120px]"
+            <div className="flex justify-between items-center mb-1">
+              <Label htmlFor="summary">Description</Label>
+              <span className="text-xs text-muted-foreground">
+                {(data.summary || "").length} characters
+              </span>
+            </div>
+            <RichTextEditor
               value={data.summary}
-              onChange={(e) => updateField("summary", e.target.value)}
+              onChange={(value) => updateField("summary", value)}
+              placeholder="A brief summary of your professional background and career objectives..."
+              minHeight="min-h-[60px]"
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </CollapsibleSection>
 
       {/* Social Profiles */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center justify-between">
-            Social Profiles
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addProfile}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Profile
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <CollapsibleSection
+        title="Social Profiles"
+        defaultOpen={true}
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => addProfile()}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Profile
+          </Button>
+        }
+      >
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2 mb-4">
+            {SOCIAL_NETWORKS.map((network) => (
+              <Button
+                key={network}
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-full text-xs h-7"
+                onClick={() => addProfile(network)}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                {network}
+              </Button>
+            ))}
+          </div>
+
           {data.profiles.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-4">
               No social profiles added yet. Click &quot;Add Profile&quot; to add
@@ -269,6 +348,7 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
                   <div className="space-y-2">
                     <Label>URL</Label>
                     <Input
+                      type="url"
                       placeholder="https://linkedin.com/in/johndoe"
                       value={profile.url}
                       onChange={(e) =>
@@ -289,8 +369,8 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
               </div>
             </div>
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </CollapsibleSection>
     </div>
   );
 }
