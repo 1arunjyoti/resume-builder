@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useCallback, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,7 @@ import {
   Wand2,
   Palette,
   PenLine,
+  FileUp,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -64,6 +65,7 @@ function EditorContent() {
   const searchParams = useSearchParams();
   const resumeId = searchParams.get("id");
   const templateParam = searchParams.get("template");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Use individual selectors to optimize re-renders
   const currentResume = useResumeStore((state) => state.currentResume);
@@ -115,6 +117,44 @@ function EditorContent() {
     a.click();
     URL.revokeObjectURL(url);
   }, [currentResume]);
+
+  const handleImportJSON = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target?.result as string;
+          const parsed = JSON.parse(content);
+
+          // Basic validation
+          if (!parsed.basics) {
+            alert("Invalid resume JSON file");
+            return;
+          }
+
+          // Ensure we keep the current ID and just update content
+          updateCurrentResume({
+            ...parsed,
+            id: currentResume?.id || parsed.id,
+          });
+        } catch (err) {
+          console.error("Failed to import JSON", err);
+          alert("Failed to parse JSON file");
+        }
+      };
+      reader.readAsText(file);
+      // Reset input value to allow selecting same file again
+      event.target.value = "";
+    },
+    [currentResume, updateCurrentResume],
+  );
 
   const handleFillSampleData = useCallback(() => {
     if (!currentResume) return;
@@ -180,6 +220,13 @@ function EditorContent() {
 
   return (
     <div className="h-screen overflow-hidden bg-background flex flex-col">
+      <input
+        type="file"
+        accept=".json"
+        ref={fileInputRef}
+        className="hidden"
+        onChange={handleFileChange}
+      />
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
@@ -256,6 +303,15 @@ function EditorContent() {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={handleImportJSON}
+                className="text-primary border-primary/50 hover:bg-primary/10"
+              >
+                <FileUp className="h-4 w-4" />
+                Import JSON
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleExportJSON}
                 className="text-primary border-primary/50 hover:bg-primary/10"
               >
@@ -314,6 +370,14 @@ function EditorContent() {
                     </SheetDescription>
                   </SheetHeader>
                   <div className="flex flex-col gap-4 mt-4">
+                    <Button
+                      variant="outline"
+                      className="justify-start text-foreground"
+                      onClick={handleImportJSON}
+                    >
+                      <FileUp className="h-4 w-4 mr-2" />
+                      Import JSON
+                    </Button>
                     <Button
                       variant="outline"
                       className="justify-start text-foreground"

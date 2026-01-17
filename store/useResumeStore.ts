@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { db, type Resume } from '@/db';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -72,11 +73,17 @@ const createEmptyResume = (title: string = 'Untitled Resume', templateId: string
       nameFont: 'body',
       skillsDisplayStyle: 'grid',
       skillsLevelStyle: 3,
-      languagesDisplayStyle: 'level',
-      languagesLevelStyle: 'dots',
-      interestsDisplayStyle: 'compact',
-      interestsSeparator: 'pipe',
-      interestsSubinfoStyle: 'dash',
+      skillsListStyle: 'bullet',
+      languagesListStyle: 'bullet',
+      languagesNameBold: true,
+      languagesNameItalic: false,
+      languagesFluencyBold: false,
+      languagesFluencyItalic: false,
+      interestsListStyle: 'bullet',
+      interestsNameBold: true,
+      interestsNameItalic: false,
+      interestsKeywordsBold: false,
+      interestsKeywordsItalic: false,
       certificatesDisplayStyle: 'grid',
       certificatesLevelStyle: 3,
       nameFontSize: 0,
@@ -92,7 +99,89 @@ const createEmptyResume = (title: string = 'Untitled Resume', templateId: string
       showProfileImage: false,
       profileImageSize: 'M',
       profileImageShape: 'circle',
-      profileImageBorder: false
+      profileImageBorder: false,
+      // Experience
+      experienceCompanyListStyle: 'bullet',
+      experienceCompanyBold: true,
+      experienceCompanyItalic: false,
+      experiencePositionBold: true,
+      experiencePositionItalic: false,
+      experienceWebsiteBold: false,
+      experienceWebsiteItalic: false,
+      experienceDateBold: false,
+      experienceDateItalic: false,
+      experienceAchievementsListStyle: 'bullet',
+      experienceAchievementsBold: false,
+      experienceAchievementsItalic: false,
+      // Education
+      educationInstitutionListStyle: 'bullet',
+      educationInstitutionBold: true,
+      educationInstitutionItalic: false,
+      educationDegreeBold: false,
+      educationDegreeItalic: false,
+      educationAreaBold: false,
+      educationAreaItalic: false,
+      educationDateBold: false,
+      educationDateItalic: false,
+      educationGpaBold: false,
+      educationGpaItalic: false,
+      educationCoursesBold: false,
+      educationCoursesItalic: false,
+      // Publications
+      publicationsListStyle: 'bullet',
+      publicationsNameBold: true,
+      publicationsNameItalic: false,
+      publicationsPublisherBold: false,
+      publicationsPublisherItalic: false,
+      publicationsUrlBold: false,
+      publicationsUrlItalic: false,
+      publicationsDateBold: false,
+      publicationsDateItalic: false,
+      // Awards
+      awardsListStyle: 'bullet',
+      awardsTitleBold: true,
+      awardsTitleItalic: false,
+      awardsAwarderBold: false,
+      awardsAwarderItalic: false,
+      awardsDateBold: false,
+      awardsDateItalic: false,
+      // References
+      referencesListStyle: 'bullet',
+      referencesNameBold: true,
+      referencesNameItalic: false,
+      referencesPositionBold: false,
+      referencesPositionItalic: false,
+      // Custom
+      customSectionListStyle: 'bullet',
+      customSectionNameBold: true,
+      customSectionNameItalic: false,
+      customSectionDescriptionBold: false,
+      customSectionDescriptionItalic: false,
+      customSectionDateBold: false,
+      customSectionDateItalic: false,
+      customSectionUrlBold: false,
+      customSectionUrlItalic: false,
+      // Projects
+      projectsListStyle: 'bullet',
+      projectsNameBold: true,
+      projectsNameItalic: false,
+      projectsDateBold: false,
+      projectsDateItalic: false,
+      projectsTechnologiesBold: false,
+      projectsTechnologiesItalic: false,
+      projectsAchievementsListStyle: 'bullet',
+      projectsFeaturesBold: false,
+      projectsFeaturesItalic: false,
+      // Certificates (Extended)
+      certificatesListStyle: 'bullet',
+      certificatesNameBold: true,
+      certificatesNameItalic: false,
+      certificatesIssuerBold: false,
+      certificatesIssuerItalic: false,
+      certificatesDateBold: false,
+      certificatesDateItalic: false,
+      certificatesUrlBold: false,
+      certificatesUrlItalic: false,
     },
   },
   basics: {
@@ -118,108 +207,123 @@ const createEmptyResume = (title: string = 'Untitled Resume', templateId: string
   custom: [],
 });
 
-export const useResumeStore = create<ResumeState>((set, get) => ({
-  currentResume: null,
-  isLoading: false,
-  error: null,
+export const useResumeStore = create<ResumeState>()(
+  persist(
+    (set, get) => ({
+      currentResume: null,
+      isLoading: false,
+      error: null,
 
-  loadResume: async (id: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      const resume = await db.resumes.get(id);
-      if (resume) {
-        set({ currentResume: resume, isLoading: false });
-      } else {
-        set({ error: 'Resume not found', isLoading: false });
-      }
-    } catch (err) {
-      set({ error: (err as Error).message, isLoading: false });
-    }
-  },
+      loadResume: async (id: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          // Check if we already have the resume in state (from persistence)
+          const { currentResume } = get();
+          if (currentResume && currentResume.id === id) {
+             set({ isLoading: false });
+             return;
+          }
 
-  saveResume: async (resume: Resume) => {
-    set({ isLoading: true, error: null });
-    try {
-      const updatedResume = {
-        ...resume,
-        meta: {
-          ...resume.meta,
-          lastModified: new Date().toISOString(),
-        },
-      };
-      await db.resumes.put(updatedResume);
-      set({ currentResume: updatedResume, isLoading: false });
-    } catch (err) {
-      set({ error: (err as Error).message, isLoading: false });
-    }
-  },
-
-  createNewResume: async (title?: string, templateId: string = 'ats') => {
-    set({ isLoading: true, error: null });
-    try {
-      const newResume = createEmptyResume(title, templateId);
-      await db.resumes.add(newResume);
-      set({ currentResume: newResume, isLoading: false });
-      return newResume;
-    } catch (err) {
-      set({ error: (err as Error).message, isLoading: false });
-      throw err;
-    }
-  },
-
-  deleteResume: async (id: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      await db.resumes.delete(id);
-      const { currentResume } = get();
-      if (currentResume?.id === id) {
-        set({ currentResume: null });
-      }
-      set({ isLoading: false });
-    } catch (err) {
-      set({ error: (err as Error).message, isLoading: false });
-    }
-  },
-
-  getAllResumes: async () => {
-    try {
-      return await db.resumes.orderBy('meta.lastModified').reverse().toArray();
-    } catch (err) {
-      set({ error: (err as Error).message });
-      return [];
-    }
-  },
-
-  updateCurrentResume: (updates: Partial<Resume>) => {
-    const { currentResume } = get();
-    if (currentResume) {
-      set({
-        currentResume: {
-          ...currentResume,
-          ...updates,
-          meta: {
-            ...currentResume.meta,
-            ...(updates.meta || {}),
-            lastModified: new Date().toISOString(),
-          },
-        },
-      });
-    }
-  },
-
-  resetResume: () => {
-    const { currentResume } = get();
-    if (currentResume) {
-      const empty = createEmptyResume(currentResume.meta.title, currentResume.meta.templateId);
-      set({
-        currentResume: {
-          ...empty,
-          id: currentResume.id, // Keep same ID
-          meta: currentResume.meta, // Keep same meta (title, theme, template)
+          const resume = await db.resumes.get(id);
+          if (resume) {
+            set({ currentResume: resume, isLoading: false });
+          } else {
+            set({ error: 'Resume not found', isLoading: false });
+          }
+        } catch (err) {
+          set({ error: (err as Error).message, isLoading: false });
         }
-      });
-    }
-  },
+      },
 
-  clearError: () => set({ error: null }),
-}));
+      saveResume: async (resume: Resume) => {
+        set({ isLoading: true, error: null });
+        try {
+          const updatedResume = {
+            ...resume,
+            meta: {
+              ...resume.meta,
+              lastModified: new Date().toISOString(),
+            },
+          };
+          await db.resumes.put(updatedResume);
+          set({ currentResume: updatedResume, isLoading: false });
+        } catch (err) {
+          set({ error: (err as Error).message, isLoading: false });
+        }
+      },
+
+      createNewResume: async (title?: string, templateId: string = 'ats') => {
+        set({ isLoading: true, error: null });
+        try {
+          const newResume = createEmptyResume(title, templateId);
+          await db.resumes.add(newResume);
+          set({ currentResume: newResume, isLoading: false });
+          return newResume;
+        } catch (err) {
+          set({ error: (err as Error).message, isLoading: false });
+          throw err;
+        }
+      },
+
+      deleteResume: async (id: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          await db.resumes.delete(id);
+          const { currentResume } = get();
+          if (currentResume?.id === id) {
+            set({ currentResume: null });
+          }
+          set({ isLoading: false });
+        } catch (err) {
+          set({ error: (err as Error).message, isLoading: false });
+        }
+      },
+
+      getAllResumes: async () => {
+        try {
+          return await db.resumes.orderBy('meta.lastModified').reverse().toArray();
+        } catch (err) {
+          set({ error: (err as Error).message });
+          return [];
+        }
+      },
+
+      updateCurrentResume: (updates: Partial<Resume>) => {
+        const { currentResume } = get();
+        if (currentResume) {
+          set({
+            currentResume: {
+              ...currentResume,
+              ...updates,
+              meta: {
+                ...currentResume.meta,
+                ...(updates.meta || {}),
+                lastModified: new Date().toISOString(),
+              },
+            },
+          });
+        }
+      },
+
+      resetResume: () => {
+        const { currentResume } = get();
+        if (currentResume) {
+          const empty = createEmptyResume(currentResume.meta.title, currentResume.meta.templateId);
+          set({
+            currentResume: {
+              ...empty,
+              id: currentResume.id, // Keep same ID
+              meta: currentResume.meta, // Keep same meta (title, theme, template)
+            }
+          });
+        }
+      },
+
+      clearError: () => set({ error: null }),
+    }),
+    {
+      name: 'resume-storage', // unique name
+      partialize: (state) => ({ currentResume: state.currentResume }), // only persist currentResume
+    }
+  )
+);

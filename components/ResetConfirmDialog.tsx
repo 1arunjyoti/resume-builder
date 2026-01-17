@@ -39,7 +39,7 @@ export function ResetConfirmDialog({
             size="sm"
             className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
           >
-            <RotateCcw className="h-4 w-4 mr-2" />
+            <RotateCcw className="h-4 w-4" />
             Reset
           </Button>
         )}

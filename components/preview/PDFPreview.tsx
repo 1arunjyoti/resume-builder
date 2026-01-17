@@ -2,17 +2,31 @@
 
 import { useCallback, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { FileText, Loader2, Download, Palette } from "lucide-react";
+import {
+  FileText,
+  Loader2,
+  Download,
+  Palette,
+  FileType,
+  ChevronDown,
+} from "lucide-react";
 import type { Resume } from "@/db";
 import { useResumeStore } from "@/store/useResumeStore";
 import { useEffect } from "react";
 
 import { TEMPLATES, type TemplateType } from "@/lib/constants";
+import { generateDocx } from "@/lib/docx-generator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Dynamically import PDF generation to avoid SSR issues
 const generatePDFAsync = async (
   resume: Resume,
-  template: TemplateType
+  template: TemplateType,
 ): Promise<Blob> => {
   if (template === "creative") {
     const { generateCreativePDF } =
@@ -57,7 +71,7 @@ export function PDFPreview({ resume }: PDFPreviewProps) {
 
   // Initialize from resume meta, defaulting to 'ats'
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>(
-    (resume.meta.templateId as TemplateType) || "ats"
+    (resume.meta.templateId as TemplateType) || "ats",
   );
 
   const { updateCurrentResume } = useResumeStore();
@@ -127,6 +141,21 @@ export function PDFPreview({ resume }: PDFPreviewProps) {
     a.click();
   }, [pdfUrl, resume.meta.title]);
 
+  const handleDownloadDocx = useCallback(async () => {
+    try {
+      const blob = await generateDocx(resume);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${resume.meta.title || "resume"}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("DOCX generation error:", err);
+      // Optional: Add toast notification here
+    }
+  }, [resume]);
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border-b">
@@ -151,10 +180,31 @@ export function PDFPreview({ resume }: PDFPreviewProps) {
             {pdfUrl ? "Regenerate" : "Generate PDF"}
           </Button>
           {pdfUrl && (
-            <Button size="sm" onClick={handleDownload}>
-              <Download className="h-4 w-4" />
-              Download
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm">
+                  <Download className="h-4 w-4" />
+                  Download
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={handleDownload}
+                  className="cursor-pointer"
+                >
+                  <FileText className="h-4 w-4" />
+                  Download PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleDownloadDocx}
+                  className="cursor-pointer"
+                >
+                  <FileType className="h-4 w-4" />
+                  Download DOCX
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>
