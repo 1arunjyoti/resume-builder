@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Trash2, Upload, User } from "lucide-react";
 import type { ResumeBasics } from "@/db";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 
@@ -19,7 +19,38 @@ interface BasicsFormProps {
 
 export function BasicsForm({ data, onChange }: BasicsFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // imagePreview is for URLs created from file uploads (user action)
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // Create blob URL for data.image using useMemo (for persisted images)
+  // This avoids calling setState in useEffect
+  const dataImageUrl = useMemo(() => {
+    if (data.image && !imagePreview) {
+      return URL.createObjectURL(data.image);
+    }
+    return null;
+  }, [data.image, imagePreview]);
+
+  // Cleanup dataImageUrl when it changes or on unmount
+  useEffect(() => {
+    return () => {
+      if (dataImageUrl) {
+        URL.revokeObjectURL(dataImageUrl);
+      }
+    };
+  }, [dataImageUrl]);
+
+  // Cleanup imagePreview on unmount
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
+
+  // The display URL is either from user upload or from persisted data
+  const displayImageUrl = imagePreview || dataImageUrl;
 
   const SOCIAL_NETWORKS = [
     "LinkedIn",
@@ -32,7 +63,7 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
 
   const updateField = <K extends keyof ResumeBasics>(
     field: K,
-    value: ResumeBasics[K]
+    value: ResumeBasics[K],
   ) => {
     onChange({ ...data, [field]: value });
   };
@@ -47,6 +78,11 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Revoke previous URL to prevent memory leak
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+
       // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
@@ -60,6 +96,10 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
   };
 
   const handleRemoveImage = () => {
+    // Revoke URL to prevent memory leak
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
     setImagePreview(null);
     updateField("image", undefined);
     if (fileInputRef.current) {
@@ -102,7 +142,7 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
   const updateProfile = (
     index: number,
     field: "network" | "username" | "url",
-    value: string
+    value: string,
   ) => {
     const newProfiles = [...data.profiles];
     const updatedProfile = { ...newProfiles[index], [field]: value };
@@ -131,12 +171,9 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
       <CollapsibleSection title="Profile Photo" icon={User} defaultOpen={true}>
         <div className="flex items-center gap-4">
           <div className="relative h-24 w-24 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/25">
-            {imagePreview || data.image ? (
+            {displayImageUrl ? (
               <Image
-                src={
-                  imagePreview ||
-                  (data.image ? URL.createObjectURL(data.image) : "")
-                }
+                src={displayImageUrl}
                 alt="Profile"
                 fill
                 className="object-cover"
@@ -163,7 +200,7 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
               <Upload className="h-4 w-4 mr-2" />
               Upload Photo
             </Button>
-            {(imagePreview || data.image) && (
+            {displayImageUrl && (
               <Button
                 type="button"
                 variant="ghost"

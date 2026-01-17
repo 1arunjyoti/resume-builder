@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText, Loader2, Download, Palette } from "lucide-react";
 import type { Resume } from "@/db";
@@ -15,28 +15,29 @@ const generatePDFAsync = async (
   template: TemplateType
 ): Promise<Blob> => {
   if (template === "creative") {
-    const { generateCreativePDF } = await import(
-      "@/components/templates/CreativeTemplate"
-    );
+    const { generateCreativePDF } =
+      await import("@/components/templates/CreativeTemplate");
     return generateCreativePDF(resume);
   }
   if (template === "modern") {
-    const { generateModernPDF } = await import(
-      "@/components/templates/ModernTemplate"
-    );
+    const { generateModernPDF } =
+      await import("@/components/templates/ModernTemplate");
     return generateModernPDF(resume);
   }
   if (template === "professional") {
-    const { generateProfessionalPDF } = await import(
-      "@/components/templates/ProfessionalTemplate"
-    );
+    const { generateProfessionalPDF } =
+      await import("@/components/templates/ProfessionalTemplate");
     return generateProfessionalPDF(resume);
   }
   if (template === "elegant") {
-    const { generateElegantPDF } = await import(
-      "@/components/templates/ElegantTemplate"
-    );
+    const { generateElegantPDF } =
+      await import("@/components/templates/ElegantTemplate");
     return generateElegantPDF(resume);
+  }
+  if (template === "classic") {
+    const { generateClassicPDF } =
+      await import("@/components/templates/ClassicTemplate");
+    return generateClassicPDF(resume);
   }
   const { generatePDF } = await import("@/components/templates/ATSTemplate");
   return generatePDF(resume);
@@ -50,6 +51,10 @@ export function PDFPreview({ resume }: PDFPreviewProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Ref to track usage to avoid re-dependency loop
+  const pdfUrlRef = useRef<string | null>(null);
+
   // Initialize from resume meta, defaulting to 'ats'
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>(
     (resume.meta.templateId as TemplateType) || "ats"
@@ -64,18 +69,6 @@ export function PDFPreview({ resume }: PDFPreviewProps) {
     }
   }, [resume.meta.templateId]);
 
-  const handleTemplateChange = (id: TemplateType) => {
-    setSelectedTemplate(id);
-    setPdfUrl(null); // Reset preview
-    // Persist change
-    updateCurrentResume({
-      meta: {
-        ...resume.meta,
-        templateId: id,
-      },
-    });
-  };
-
   const handleGenerate = useCallback(async () => {
     setIsGenerating(true);
     setError(null);
@@ -84,11 +77,12 @@ export function PDFPreview({ resume }: PDFPreviewProps) {
       const blob = await generatePDFAsync(resume, selectedTemplate);
       const url = URL.createObjectURL(blob);
 
-      // Cleanup previous URL
-      if (pdfUrl) {
-        URL.revokeObjectURL(pdfUrl);
+      // Cleanup previous URL using ref
+      if (pdfUrlRef.current) {
+        URL.revokeObjectURL(pdfUrlRef.current);
       }
 
+      pdfUrlRef.current = url;
       setPdfUrl(url);
     } catch (err) {
       console.error("PDF generation error:", err);
@@ -96,7 +90,34 @@ export function PDFPreview({ resume }: PDFPreviewProps) {
     } finally {
       setIsGenerating(false);
     }
-  }, [resume, pdfUrl, selectedTemplate]);
+  }, [resume, selectedTemplate]); // Removed pdfUrl from dependencies
+
+  // Debounced auto-generation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleGenerate();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [resume, selectedTemplate, handleGenerate]);
+
+  const handleTemplateChange = (id: TemplateType) => {
+    setSelectedTemplate(id);
+    // Reset preview
+    setPdfUrl(null);
+    if (pdfUrlRef.current) {
+      URL.revokeObjectURL(pdfUrlRef.current);
+      pdfUrlRef.current = null;
+    }
+
+    // Persist change
+    updateCurrentResume({
+      meta: {
+        ...resume.meta,
+        templateId: id,
+      },
+    });
+  };
 
   const handleDownload = useCallback(() => {
     if (!pdfUrl) return;
@@ -125,13 +146,13 @@ export function PDFPreview({ resume }: PDFPreviewProps) {
             {isGenerating ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
-              <FileText className="h-4 w-4 mr-2" />
+              <FileText className="h-4 w-4" />
             )}
             {pdfUrl ? "Regenerate" : "Generate PDF"}
           </Button>
           {pdfUrl && (
             <Button size="sm" onClick={handleDownload}>
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4" />
               Download
             </Button>
           )}

@@ -1,4 +1,4 @@
-# Project Plan: Privacy-First Resume Builder
+# Project Plan: SecureCV.app
 
 A high-performance, **Progressive Web App (PWA)** for building professional resumes. All processing, data storage, and PDF generation occur strictly on the client side, ensuring complete user privacy (Zero-Knowledge Architecture).
 
@@ -95,7 +95,7 @@ Standardized JSON structure compliant with JSON Resume (where possible) but adap
 
 ## 5. Directory Structure
 
-```
+```text
 /root
 ├── app/
 │   ├── layout.tsx

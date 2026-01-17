@@ -160,7 +160,10 @@ function SpacingControl({
             className="h-10 w-10 rounded-lg border-input"
             onClick={() =>
               onChange(
-                Math.max(min, parseFloat((value - step).toFixed(decimals || 2)))
+                Math.max(
+                  min,
+                  parseFloat((value - step).toFixed(decimals || 2)),
+                ),
               )
             }
             disabled={value <= min}
@@ -173,7 +176,10 @@ function SpacingControl({
             className="h-10 w-10 rounded-lg border-input"
             onClick={() =>
               onChange(
-                Math.min(max, parseFloat((value + step).toFixed(decimals || 2)))
+                Math.min(
+                  max,
+                  parseFloat((value + step).toFixed(decimals || 2)),
+                ),
               )
             }
             disabled={value >= max}
@@ -189,7 +195,7 @@ function SpacingControl({
 export function DesignSettings() {
   const currentResume = useResumeStore((state) => state.currentResume);
   const updateCurrentResume = useResumeStore(
-    (state) => state.updateCurrentResume
+    (state) => state.updateCurrentResume,
   );
 
   // Collapsible state for all cards - default to open
@@ -217,7 +223,7 @@ export function DesignSettings() {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   if (!currentResume) return null;
@@ -275,7 +281,7 @@ export function DesignSettings() {
 
   const updateSetting = (
     key: keyof typeof layoutSettings,
-    value: number | boolean | string | string[]
+    value: number | boolean | string | string[],
   ) => {
     updateCurrentResume({
       meta: {
@@ -302,7 +308,7 @@ export function DesignSettings() {
       const newOrder = arrayMove(
         layoutSettings.sectionOrder || SECTIONS.map((s) => s.id),
         oldIndex,
-        newIndex
+        newIndex,
       );
       updateSetting("sectionOrder", newOrder);
     }
@@ -363,6 +369,20 @@ export function DesignSettings() {
           interestsSubinfoStyle: "dash",
           certificatesDisplayStyle: "grid",
           certificatesLevelStyle: 3,
+          nameFontSize: 0,
+          nameLineHeight: 0,
+          titleFontSize: 0,
+          titleLineHeight: 0,
+          titleBold: false,
+          titleItalic: false,
+          contactFontSize: 0,
+          contactBold: false,
+          contactItalic: false,
+          contactSeparator: "pipe",
+          showProfileImage: false,
+          profileImageSize: "M",
+          profileImageShape: "circle",
+          profileImageBorder: false,
         },
       },
     });
@@ -515,7 +535,7 @@ export function DesignSettings() {
                       onClick={() =>
                         updateSetting(
                           "headerPosition",
-                          option.value as "top" | "left" | "right"
+                          option.value as "top" | "left" | "right",
                         )
                       }
                       className={`flex flex-col items-center gap-2 p-2 rounded-lg border-2 transition-all hover:bg-muted/50 w-20 ${
@@ -605,7 +625,7 @@ export function DesignSettings() {
                         layoutSettings.sectionOrder || SECTIONS.map((s) => s.id)
                       ).map((sectionId, index) => {
                         const section = SECTIONS.find(
-                          (s) => s.id === sectionId
+                          (s) => s.id === sectionId,
                         );
                         if (!section) return null;
                         const orderList =
@@ -815,7 +835,7 @@ export function DesignSettings() {
                       onClick={() =>
                         updateSetting(
                           "personalDetailsArrangement",
-                          arrangement as 1 | 2
+                          arrangement as 1 | 2,
                         )
                       }
                       className={`flex items-center justify-center p-4 rounded-lg border-2 transition-all hover:bg-muted/50 ${
@@ -892,7 +912,7 @@ export function DesignSettings() {
                       onClick={() =>
                         updateSetting(
                           "personalDetailsIconStyle",
-                          iconStyle as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
+                          iconStyle as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8,
                         )
                       }
                       className={`h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all ${
@@ -957,7 +977,7 @@ export function DesignSettings() {
                       onClick={() =>
                         updateSetting(
                           "sectionHeadingStyle",
-                          style as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
+                          style as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8,
                         )
                       }
                       className={`relative flex flex-col items-center justify-center p-3 h-14 rounded-lg border-2 transition-all hover:bg-muted/50 ${
@@ -1045,7 +1065,7 @@ export function DesignSettings() {
                       onClick={() =>
                         updateSetting(
                           "sectionHeadingCapitalization",
-                          option.value as "capitalize" | "uppercase"
+                          option.value as "capitalize" | "uppercase",
                         )
                       }
                       className={`py-2.5 px-4 rounded-full border-2 text-sm font-medium transition-all ${
@@ -1109,8 +1129,8 @@ export function DesignSettings() {
                       {iconStyle === "none"
                         ? "None"
                         : iconStyle === "outline"
-                        ? "Outline"
-                        : "Filled"}
+                          ? "Outline"
+                          : "Filled"}
                     </button>
                   ))}
                 </div>
@@ -1262,7 +1282,7 @@ export function DesignSettings() {
                       onClick={() =>
                         updateSetting(
                           "entryLayoutStyle",
-                          style as 1 | 2 | 3 | 4 | 5
+                          style as 1 | 2 | 3 | 4 | 5,
                         )
                       }
                       className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all hover:bg-muted/50 ${
@@ -1350,7 +1370,7 @@ export function DesignSettings() {
                       onClick={() =>
                         updateSetting(
                           "entryColumnWidth",
-                          option.value as "auto" | "manual"
+                          option.value as "auto" | "manual",
                         )
                       }
                       className={`py-2.5 px-4 rounded-full border-2 text-sm font-medium transition-all ${
@@ -1414,8 +1434,8 @@ export function DesignSettings() {
                       {style === "normal"
                         ? "Normal"
                         : style === "bold"
-                        ? "Bold"
-                        : "Italic"}
+                          ? "Bold"
+                          : "Italic"}
                     </button>
                   ))}
                 </div>
@@ -1438,7 +1458,7 @@ export function DesignSettings() {
                       onClick={() =>
                         updateSetting(
                           "entrySubtitlePlacement",
-                          option.value as "sameLine" | "nextLine"
+                          option.value as "sameLine" | "nextLine",
                         )
                       }
                       className={`py-2.5 px-4 rounded-full border-2 text-sm font-medium transition-all ${
@@ -1465,7 +1485,7 @@ export function DesignSettings() {
                   onClick={() =>
                     updateSetting(
                       "entryIndentBody",
-                      !layoutSettings.entryIndentBody
+                      !layoutSettings.entryIndentBody,
                     )
                   }
                   className="flex items-center gap-3"
@@ -1502,7 +1522,7 @@ export function DesignSettings() {
                       onClick={() =>
                         updateSetting(
                           "entryListStyle",
-                          option.value as "bullet" | "hyphen"
+                          option.value as "bullet" | "hyphen",
                         )
                       }
                       className={`py-2.5 px-4 rounded-full border-2 text-sm font-medium transition-all ${
@@ -1558,12 +1578,12 @@ export function DesignSettings() {
                       {style === "grid"
                         ? "Grid"
                         : style === "level"
-                        ? "Level"
-                        : style === "compact"
-                        ? "Compact"
-                        : "Bubble"}
+                          ? "Level"
+                          : style === "compact"
+                            ? "Compact"
+                            : "Bubble"}
                     </button>
-                  )
+                  ),
                 )}
               </div>
               {/* Level Style */}
@@ -1574,7 +1594,7 @@ export function DesignSettings() {
                     onClick={() =>
                       updateSetting(
                         "skillsLevelStyle",
-                        levelStyle as 1 | 2 | 3 | 4
+                        levelStyle as 1 | 2 | 3 | 4,
                       )
                     }
                     className={`flex items-center justify-center p-3 rounded-lg border-2 transition-all hover:bg-muted/50 ${
@@ -1643,12 +1663,12 @@ export function DesignSettings() {
                       {style === "grid"
                         ? "Grid"
                         : style === "level"
-                        ? "Level"
-                        : style === "compact"
-                        ? "Compact"
-                        : "Bubble"}
+                          ? "Level"
+                          : style === "compact"
+                            ? "Compact"
+                            : "Bubble"}
                     </button>
-                  )
+                  ),
                 )}
               </div>
               {/* Level Display Style */}
@@ -1666,8 +1686,8 @@ export function DesignSettings() {
                     {style === "text"
                       ? "Text"
                       : style === "dots"
-                      ? "Dots"
-                      : "Bar"}
+                        ? "Dots"
+                        : "Bar"}
                   </button>
                 ))}
               </div>
@@ -1714,8 +1734,8 @@ export function DesignSettings() {
                     {style === "grid"
                       ? "Grid"
                       : style === "compact"
-                      ? "Compact"
-                      : "Bubble"}
+                        ? "Compact"
+                        : "Bubble"}
                   </button>
                 ))}
               </div>
@@ -1735,12 +1755,12 @@ export function DesignSettings() {
                       {sep === "bullet"
                         ? "Bullet"
                         : sep === "pipe"
-                        ? "Pipe"
-                        : sep === "newLine"
-                        ? "New Line"
-                        : "Comma"}
+                          ? "Pipe"
+                          : sep === "newLine"
+                            ? "New Line"
+                            : "Comma"}
                     </button>
-                  )
+                  ),
                 )}
               </div>
               {/* Subinfo Style */}
@@ -1765,8 +1785,8 @@ export function DesignSettings() {
                       {style === "dash"
                         ? "– Dash"
                         : style === "colon"
-                        ? ": Colon"
-                        : "() Bracket"}
+                          ? ": Colon"
+                          : "() Bracket"}
                     </button>
                   ))}
                 </div>
@@ -1814,8 +1834,8 @@ export function DesignSettings() {
                     {style === "grid"
                       ? "Grid"
                       : style === "compact"
-                      ? "Compact"
-                      : "Bubble"}
+                        ? "Compact"
+                        : "Bubble"}
                   </button>
                 ))}
               </div>
@@ -1827,7 +1847,7 @@ export function DesignSettings() {
                     onClick={() =>
                       updateSetting(
                         "certificatesLevelStyle",
-                        levelStyle as 1 | 2 | 3 | 4
+                        levelStyle as 1 | 2 | 3 | 4,
                       )
                     }
                     className={`flex items-center justify-center p-3 rounded-lg border-2 transition-all hover:bg-muted/50 ${

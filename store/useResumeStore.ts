@@ -24,7 +24,7 @@ const createEmptyResume = (title: string = 'Untitled Resume', templateId: string
   meta: {
     title,
     templateId,
-    themeColor: '#3b82f6',
+    themeColor: '#000000',
     lastModified: new Date().toISOString(),
     layoutSettings: {
       fontSize: 8.5,
@@ -32,11 +32,13 @@ const createEmptyResume = (title: string = 'Untitled Resume', templateId: string
       sectionMargin: 8,
       bulletMargin: 2,
       useBullets: true,
+      themeColorTarget: ["headings", "links", "icons", "decorations"],
       columnCount: 1,
       headerPosition: 'top',
       leftColumnWidth: 30,
       marginHorizontal: 15,
       marginVertical: 15,
+      headerBottomMargin: 20,
       sectionOrder: [
         'work',
         'education',
@@ -77,6 +79,20 @@ const createEmptyResume = (title: string = 'Untitled Resume', templateId: string
       interestsSubinfoStyle: 'dash',
       certificatesDisplayStyle: 'grid',
       certificatesLevelStyle: 3,
+      nameFontSize: 0,
+      nameLineHeight: 0,
+      titleFontSize: 0,
+      titleLineHeight: 0,
+      titleBold: false,
+      titleItalic: false,
+      contactFontSize: 0,
+      contactBold: false,
+      contactItalic: false,
+      contactSeparator: 'pipe',
+      showProfileImage: false,
+      profileImageSize: 'M',
+      profileImageShape: 'circle',
+      profileImageBorder: false
     },
   },
   basics: {

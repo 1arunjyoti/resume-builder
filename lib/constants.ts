@@ -1,6 +1,11 @@
-export type TemplateType = "ats" | "creative" | "modern" | "professional" | "elegant";
+export type TemplateType = "ats" | "creative" | "modern" | "professional" | "elegant" | "classic";
 
 export const TEMPLATES: { id: TemplateType; name: string; description: string }[] = [
+  {
+    id: "classic",
+    name: "Classic",
+    description: "Timeless, structured, serif layout",
+  },
   {
     id: "ats",
     name: "ATS Scanner",
@@ -25,13 +30,15 @@ export const TEMPLATES: { id: TemplateType; name: string; description: string }[
 ];
 
 export const THEME_COLORS = [
+  { name: "Black", value: "#000000" },
+  { name: "Slate", value: "#64748b" },
+  { name: "Gray", value: "#9ca3af" },
+  { name: "White", value: "#f1f5f9" },
   { name: "Blue", value: "#3b82f6" },
   { name: "Purple", value: "#8b5cf6" },
   { name: "Green", value: "#10b981" },
   { name: "Red", value: "#ef4444" },
   { name: "Orange", value: "#f97316" },
-  { name: "Slate", value: "#64748b" },
-  { name: "Black", value: "#1a1a1a" },
 ];
 
 export const SECTIONS = [

@@ -58,22 +58,24 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { ResetConfirmDialog } from "@/components/ResetConfirmDialog";
 
 function EditorContent() {
   const searchParams = useSearchParams();
   const resumeId = searchParams.get("id");
   const templateParam = searchParams.get("template");
 
-  const {
-    currentResume,
-    isLoading,
-    error,
-    loadResume,
-    createNewResume,
-    saveResume,
-    updateCurrentResume,
-    resetResume,
-  } = useResumeStore();
+  // Use individual selectors to optimize re-renders
+  const currentResume = useResumeStore((state) => state.currentResume);
+  const isLoading = useResumeStore((state) => state.isLoading);
+  const error = useResumeStore((state) => state.error);
+  const loadResume = useResumeStore((state) => state.loadResume);
+  const createNewResume = useResumeStore((state) => state.createNewResume);
+  const saveResume = useResumeStore((state) => state.saveResume);
+  const updateCurrentResume = useResumeStore(
+    (state) => state.updateCurrentResume,
+  );
+  const resetResume = useResumeStore((state) => state.resetResume);
 
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("basics");
@@ -99,13 +101,7 @@ function EditorContent() {
   }, [currentResume, saveResume]);
 
   const handleReset = useCallback(() => {
-    if (
-      window.confirm(
-        "Are you sure you want to reset all data? This cannot be undone."
-      )
-    ) {
-      resetResume();
-    }
+    resetResume();
   }, [resetResume]);
 
   const handleExportJSON = useCallback(() => {
@@ -130,6 +126,13 @@ function EditorContent() {
       education: mockData.education,
       skills: mockData.skills,
       projects: mockData.projects,
+      certificates: mockData.certificates,
+      languages: mockData.languages,
+      interests: mockData.interests,
+      publications: mockData.publications,
+      awards: mockData.awards,
+      references: mockData.references,
+      custom: mockData.custom,
     });
   }, [currentResume, updateCurrentResume]);
 
@@ -250,7 +253,12 @@ function EditorContent() {
                   Fill Sample
                 </Button>
               )}
-              <Button variant="outline" size="sm" onClick={handleExportJSON}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportJSON}
+                className="text-primary border-primary/50 hover:bg-primary/10"
+              >
                 <FileDown className="h-4 w-4" />
                 Export JSON
               </Button>
@@ -262,15 +270,7 @@ function EditorContent() {
                 )}
                 Save
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleReset}
-                className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
-              >
-                <RotateCcw className="h-4 w-4" />
-                Reset
-              </Button>
+              <ResetConfirmDialog onConfirm={handleReset} />
             </div>
 
             {/* Mobile Actions */}
@@ -322,14 +322,18 @@ function EditorContent() {
                       <FileDown className="h-4 w-4 mr-2" />
                       Export JSON
                     </Button>
-                    <Button
-                      variant="ghost"
-                      className="justify-start text-destructive hover:text-destructive/90 hover:bg-destructive/10"
-                      onClick={handleReset}
-                    >
-                      <RotateCcw className="h-4 w-4 mr-2" />
-                      Reset All Data
-                    </Button>
+                    <ResetConfirmDialog
+                      onConfirm={handleReset}
+                      trigger={
+                        <Button
+                          variant="ghost"
+                          className="justify-start text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          Reset All Data
+                        </Button>
+                      }
+                    />
                     <div className="h-px bg-border my-2" />
                     <p className="text-xs text-muted-foreground font-medium px-2">
                       View Mode

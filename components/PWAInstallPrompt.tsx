@@ -17,7 +17,7 @@ const getInitialInstalled = () => {
 
 const getInitialDismissed = () => {
   if (typeof window === "undefined") return false;
-  return sessionStorage.getItem("pwa-prompt-dismissed") === "true";
+  return localStorage.getItem("pwa-prompt-dismissed") === "true";
 };
 
 export function PWAInstallPrompt() {
@@ -25,13 +25,19 @@ export function PWAInstallPrompt() {
     useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(getInitialInstalled);
-  const [isDismissed] = useState(getInitialDismissed);
+  const [isDismissed] = useState(getInitialDismissed); // Initial state from local storage
 
   useEffect(() => {
+    // Check again in effect in case of hydration mismatch (though simple boolean is mostly fine if consistency isn't critical for initial paint)
+    // Actually, to be safe against hydration mismatch for localstorage, we usually stick to false then true.
+    // However, here we just want to suppress it.
     if (isInstalled || isDismissed) return;
 
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
+      // Double check dismissal in case it changed in another tab (optional, but good practice)
+      if (localStorage.getItem("pwa-prompt-dismissed") === "true") return;
+
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       // Show prompt after a delay
       setTimeout(() => setShowPrompt(true), 3000);
@@ -66,7 +72,7 @@ export function PWAInstallPrompt() {
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    sessionStorage.setItem("pwa-prompt-dismissed", "true");
+    localStorage.setItem("pwa-prompt-dismissed", "true");
   };
 
   if (isInstalled || isDismissed || !showPrompt || !deferredPrompt) {
@@ -81,7 +87,7 @@ export function PWAInstallPrompt() {
             <Smartphone className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-sm">Install Resume Builder</h3>
+            <h3 className="font-semibold text-sm">Install SecureCV</h3>
             <p className="text-xs text-muted-foreground mt-1">
               Add to your home screen for offline access and a better
               experience.

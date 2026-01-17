@@ -24,7 +24,6 @@ import {
 export default function Home() {
   const navLinks = [
     { href: "#features", label: "Features" },
-    { href: "#privacy", label: "Privacy" },
     { href: "#templates", label: "Templates" },
   ];
 
@@ -40,7 +39,7 @@ export default function Home() {
                 <FileText className="h-5 w-5" />
               </div>
               <span className="font-bold text-xl tracking-tight">
-                Resume Builder
+                SecureCV.app
               </span>
             </div>
           </div>
@@ -56,12 +55,6 @@ export default function Home() {
                 {link.label}
               </Link>
             ))}
-            <Link
-              href="/privacy"
-              className="text-muted-foreground transition-colors hover:text-foreground hover:underline underline-offset-4"
-            >
-              Privacy
-            </Link>
           </nav>
 
           {/* Actions - Right */}
@@ -95,7 +88,7 @@ export default function Home() {
                         <FileText className="h-4 w-4" />
                       </div>
                       <span className="font-bold text-lg tracking-tight">
-                        Resume Builder
+                        SecureCV.app
                       </span>
                     </SheetTitle>
                     <SheetDescription className="text-sm text-muted-foreground mr-4">
@@ -327,13 +320,14 @@ export default function Home() {
       <footer className="border-t py-6 bg-background">
         <div className="container mx-auto px-4 md:px-6 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="text-sm text-muted-foreground text-center md:text-left">
-            © {new Date().getFullYear()} Resume Builder. Open Source &
+            © {new Date().getFullYear()} SecureCV.app. Open Source &
             Privacy-First.
           </div>
           <div className="flex items-center gap-8 text-sm font-medium text-muted-foreground">
             <Link
-              href="https://github.com"
+              href="https://github.com/1arunjyoti/resume-builder"
               className="hover:text-foreground transition-colors"
+              target="_blank"
             >
               GitHub
             </Link>

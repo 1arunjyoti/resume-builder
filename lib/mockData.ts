@@ -171,9 +171,49 @@ export function generateMockResume(): Omit<Resume, "id" | "meta"> {
         keywords: ["Contributing", "Mentoring"],
       },
     ],
-    publications: [],
-    awards: [],
-    references: [],
-    custom: [],
+    publications: [
+      {
+        id: uuidv4(),
+        name: "The Future of Web Development",
+        publisher: "Tech Magazine",
+        releaseDate: "2022-06",
+        url: "https://techmagazine.com",
+        summary: "An in-depth look at the latest trends and technologies in web development.",
+      },
+    ],
+    awards: [
+      {
+        id: uuidv4(),
+        title: "Best Developer",
+        awarder: "Tech Awards",
+        date: "2022-06",
+        summary: "Awarded for outstanding contributions to the tech industry.",
+      },
+    ],
+    references: [
+      {
+        id: uuidv4(),
+        name: "John Doe",
+        position: "Senior Developer",
+        reference: "John Doe is a senior developer with 10+ years of experience in software development. He has a proven track record of delivering high-quality software solutions and is a strong advocate for clean code and testing.",
+      },
+    ],
+    custom: [
+      {
+        id: uuidv4(),
+        name: "Custom Section",
+        items: [
+          {
+            id: uuidv4(),
+            name: "Custom Item",
+            description:
+              "This is a custom section that can be used to add any additional information to your resume.",
+            date: "",
+            url: "",
+            summary: "",
+          },
+        ],
+      },
+    ],
   };
 }

@@ -126,6 +126,8 @@ export interface LayoutSettings {
   sectionMargin: number; // 8-20, default 12
   bulletMargin: number; // 2-8, default 4
   useBullets: boolean; // default true
+  // Theme
+  themeColorTarget: string[]; // 'name' | 'title' | 'headings' | 'links' | 'icons' | 'decorations'
   // Advanced Layout
   columnCount: 1 | 2 | 3; // 1=One, 2=Two, 3=Mix/Custom
   headerPosition: 'top' | 'left' | 'right';
@@ -133,6 +135,7 @@ export interface LayoutSettings {
   sectionOrder: string[];
   marginHorizontal: number; // 0-30mm
   marginVertical: number; // 0-30mm
+  headerBottomMargin: number; // 0-50, default 20
   // Section Headings
   sectionHeadingStyle: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; // 8 visual styles
   sectionHeadingCapitalization: 'capitalize' | 'uppercase';
@@ -153,21 +156,126 @@ export interface LayoutSettings {
   personalDetailsIconStyle: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
   // Name
   nameSize: 'XS' | 'S' | 'M' | 'L' | 'XL';
+  nameFontSize: number;
+  nameLineHeight: number;
   nameBold: boolean;
   nameFont: 'body' | 'creative';
+  titleFontSize: number;
+  titleLineHeight: number;
+  titleBold: boolean;
+  titleItalic: boolean;
+  contactFontSize: number;
+  contactBold: boolean;
+  contactItalic: boolean;
+  contactSeparator: 'pipe' | 'dash' | 'comma';
+  // Profile Image
+  showProfileImage: boolean;
+  profileImageSize: 'S' | 'M' | 'L';
+  profileImageShape: 'circle' | 'square';
+  profileImageBorder: boolean;
   // Skills
   skillsDisplayStyle: 'grid' | 'level' | 'compact' | 'bubble';
-  skillsLevelStyle: 1 | 2 | 3 | 4;
+  skillsLevelStyle: 0 | 1 | 2 | 3 | 4;
+  skillsListStyle: 'bullet' | 'dash' | 'inline' | 'blank';
   // Languages
-  languagesDisplayStyle: 'grid' | 'level' | 'compact' | 'bubble';
-  languagesLevelStyle: 'text' | 'dots' | 'bar';
+  // Languages
+  languagesListStyle: 'bullet' | 'number' | 'none';
+  languagesNameBold: boolean;
+  languagesNameItalic: boolean;
+  languagesFluencyBold: boolean;
+  languagesFluencyItalic: boolean;
   // Interests
-  interestsDisplayStyle: 'grid' | 'compact' | 'bubble';
-  interestsSeparator: 'bullet' | 'pipe' | 'newLine' | 'comma';
-  interestsSubinfoStyle: 'dash' | 'colon' | 'bracket';
+  // Interests
+  interestsListStyle: 'bullet' | 'number' | 'none';
+  interestsNameBold: boolean;
+  interestsNameItalic: boolean;
+  interestsKeywordsBold: boolean;
+  interestsKeywordsItalic: boolean;
   // Certificates
   certificatesDisplayStyle: 'grid' | 'compact' | 'bubble';
   certificatesLevelStyle: 1 | 2 | 3 | 4;
+  // Professional Experience
+  experienceCompanyListStyle: 'bullet' | 'number' | 'none';
+  experienceCompanyBold: boolean;
+  experienceCompanyItalic: boolean;
+  experiencePositionBold: boolean;
+  experiencePositionItalic: boolean;
+  experienceWebsiteBold: boolean;
+  experienceWebsiteItalic: boolean;
+  experienceDateBold: boolean;
+  experienceDateItalic: boolean;
+  experienceAchievementsListStyle: 'bullet' | 'number' | 'none';
+  experienceAchievementsBold: boolean;
+  experienceAchievementsItalic: boolean;
+  // Education
+  educationInstitutionListStyle: 'bullet' | 'number' | 'none';
+  educationInstitutionBold: boolean;
+  educationInstitutionItalic: boolean;
+  educationDegreeBold: boolean;
+  educationDegreeItalic: boolean;
+  educationAreaBold: boolean;
+  educationAreaItalic: boolean;
+  educationDateBold: boolean;
+  educationDateItalic: boolean;
+  educationGpaBold: boolean;
+  educationGpaItalic: boolean;
+  educationCoursesBold: boolean;
+  educationCoursesItalic: boolean;
+  // Publications
+  publicationsListStyle: 'bullet' | 'number' | 'none';
+  publicationsNameBold: boolean;
+  publicationsNameItalic: boolean;
+  publicationsPublisherBold: boolean;
+  publicationsPublisherItalic: boolean;
+  publicationsUrlBold: boolean;
+  publicationsUrlItalic: boolean;
+  publicationsDateBold: boolean;
+  publicationsDateItalic: boolean;
+  // Awards
+  awardsListStyle: 'bullet' | 'number' | 'none';
+  awardsTitleBold: boolean;
+  awardsTitleItalic: boolean;
+  awardsAwarderBold: boolean;
+  awardsAwarderItalic: boolean;
+  awardsDateBold: boolean;
+  awardsDateItalic: boolean;
+  // References
+  referencesListStyle: 'bullet' | 'number' | 'none';
+  referencesNameBold: boolean;
+  referencesNameItalic: boolean;
+  referencesPositionBold: boolean;
+  referencesPositionItalic: boolean;
+  // Custom Sections
+  customSectionListStyle: 'bullet' | 'number' | 'none';
+  customSectionNameBold: boolean;
+  customSectionNameItalic: boolean;
+  customSectionDescriptionBold: boolean;
+  customSectionDescriptionItalic: boolean;
+  customSectionDateBold: boolean;
+  customSectionDateItalic: boolean;
+  customSectionUrlBold: boolean;
+  customSectionUrlItalic: boolean;
+  // Project Styles
+  projectsListStyle: 'bullet' | 'number' | 'none';
+  projectsNameBold: boolean;
+  projectsNameItalic: boolean;
+  projectsDateBold: boolean;
+  projectsDateItalic: boolean;
+  projectsTechnologiesBold: boolean;
+  projectsTechnologiesItalic: boolean;
+  projectsAchievementsListStyle: 'bullet' | 'number' | 'none';
+  projectsFeaturesBold: boolean;
+  projectsFeaturesItalic: boolean;
+  // Certificate Styles
+  certificatesListStyle: 'bullet' | 'number' | 'none';
+  certificatesNameBold: boolean;
+  certificatesNameItalic: boolean;
+  certificatesIssuerBold: boolean;
+  certificatesIssuerItalic: boolean;
+  certificatesDateBold: boolean;
+  certificatesDateItalic: boolean;
+  certificatesUrlBold: boolean;
+  certificatesUrlItalic: boolean;
 }
 
 export interface Resume {

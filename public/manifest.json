@@ -1,6 +1,6 @@
 {
-  "name": "Resume Builder",
-  "short_name": "ResumeBuilder",
+  "name": "SecureCV.app",
+  "short_name": "SecureCV",
   "description": "A privacy-first, offline-capable resume builder",
   "start_url": ".",
   "display": "standalone",

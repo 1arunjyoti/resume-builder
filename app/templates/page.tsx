@@ -10,6 +10,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { release } from "os";
 
 type Category =
   | "All"
@@ -33,6 +34,21 @@ export default function TemplatesPage() {
 
   const templates = [
     {
+      id: "classic",
+      name: "Classic",
+      description:
+        "A timeless design with structured sections and serif typography. Excellent for academic and traditional industries.",
+      category: "Professional",
+      gradient: "bg-linear-to-br from-amber-50 to-orange-50",
+      features: [
+        "Structured Layout",
+        "Times New Roman",
+        "Formal Design",
+        "Academic Ready",
+      ],
+    },
+    {
+      release: "coming soon",
       id: "ats",
       name: "ATS Scanner",
       description:
@@ -47,6 +63,7 @@ export default function TemplatesPage() {
       ],
     },
     {
+      release: "coming soon",
       id: "creative",
       name: "Creative Sidebar",
       description:
@@ -62,6 +79,7 @@ export default function TemplatesPage() {
     },
     // Placeholder for a future 'Modern' template to demonstrate filtering
     {
+      release: "coming soon",
       id: "modern",
       name: "Modern Minimalist",
       description:
@@ -77,6 +95,7 @@ export default function TemplatesPage() {
       disabled: false,
     },
     {
+      release: "coming soon",
       id: "professional",
       name: "Executive Serif",
       description:
@@ -91,6 +110,7 @@ export default function TemplatesPage() {
       ],
     },
     {
+      release: "coming soon",
       id: "elegant",
       name: "Elegant Banner",
       description:
@@ -182,8 +202,10 @@ export default function TemplatesPage() {
                   className={`h-56 ${template.gradient} border-b relative p-6 flex flex-col items-center justify-center gap-2 group-hover:scale-105 transition-transform duration-500`}
                 >
                   {/* Badge */}
-                  <div className="absolute top-4 right-4 px-2.5 py-0.5 rounded-full bg-white/50 backdrop-blur text-xs font-semibold text-foreground/80 shadow-xs">
+                  <div className="absolute top-4 right-4 px-2.5 py-0.5 rounded-lg bg-white/50 dark:bg-black/30 backdrop-blur text-xs font-semibold text-foreground/80 shadow-xs">
                     {template.category}
+                    <br />
+                    {template.release}
                   </div>
 
                   <div className="h-40 w-28 bg-white shadow-xl rounded border flex flex-col p-3 gap-2 group-hover:-translate-y-1 transition-transform">
@@ -238,7 +260,7 @@ export default function TemplatesPage() {
                       </Button>
                     ) : (
                       <Link href={`/editor?template=${template.id}`}>
-                        <Button className="w-full h-10 shadow-sm group-hover:shadow group-hover:bg-primary/90">
+                        <Button className="w-full h-10 shadow-sm group-hover:shadow group-hover:bg-primary/90 cursor-pointer">
                           Use This Template
                         </Button>
                       </Link>
