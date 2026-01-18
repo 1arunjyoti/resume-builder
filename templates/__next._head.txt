@@ -1,0 +1,6 @@
+1:"$Sreact.fragment"
+2:I[90484,[],"ViewportBoundary"]
+3:I[90484,[],"MetadataBoundary"]
+4:"$Sreact.suspense"
+5:I[86869,[],"IconMark"]
+0:{"buildId":"Kdoju_zs9IJ_Wn0OW_o1N","rsc":["$","$1","h",{"children":[null,["$","$L2",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","2",{"name":"theme-color","content":"#3b82f6"}]]}],["$","div",null,{"hidden":true,"children":["$","$L3",null,{"children":["$","$4",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"PrivateCV - Privacy-First Resume Creator"}],["$","meta","1",{"name":"description","content":"Build professional resumes offline with complete privacy. No data leaves your device."}],["$","link","2",{"rel":"manifest","href":"/manifest.json"}],["$","meta","3",{"name":"mobile-web-app-capable","content":"yes"}],["$","meta","4",{"name":"apple-mobile-web-app-title","content":"PrivateCV"}],["$","meta","5",{"name":"apple-mobile-web-app-status-bar-style","content":"default"}],["$","link","6",{"rel":"icon","href":"/resume-builder/favicon.ico?603d046c9a6fdfbb","type":"image/x-icon","sizes":"16x16"}],["$","$L5","7",{}]]}]}]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}],"loading":null,"isPartial":false}
