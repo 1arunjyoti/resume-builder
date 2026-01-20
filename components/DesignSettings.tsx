@@ -2,9 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 // import { ScrollArea } from "@/components/ui/scroll-area";
-import { SECTIONS } from "@/lib/constants";
 import { useResumeStore } from "@/store/useResumeStore";
-import { RotateCcw } from "lucide-react";
+import { getTemplateDefaults, getTemplateThemeColor } from "@/lib/template-defaults";
+import { RotateCcw, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
 
 // Import new components
@@ -62,6 +62,28 @@ export function DesignSettings() {
     }));
   };
 
+  const expandAll = () => {
+    setOpenSections((prev) => {
+      const next = { ...prev };
+      (Object.keys(next) as Array<keyof typeof prev>).forEach((k) => {
+        next[k] = true;
+      });
+      return next;
+    });
+  };
+
+  const collapseAll = () => {
+    setOpenSections((prev) => {
+      const next = { ...prev };
+      (Object.keys(next) as Array<keyof typeof prev>).forEach((k) => {
+        next[k] = false;
+      });
+      return next;
+    });
+  };
+
+  const allExpanded = Object.values(openSections).every(Boolean);
+
   if (!currentResume) return null;
 
   const layoutSettings = currentResume.meta.layoutSettings || {
@@ -74,15 +96,15 @@ export function DesignSettings() {
     headerPosition: "top",
     leftColumnWidth: 30,
     sectionOrder: [
-      "work",
       "education",
       "skills",
+      "work",
       "projects",
       "certificates",
-      "languages",
-      "interests",
       "publications",
       "awards",
+      "languages",
+      "interests",
       "references",
       "custom",
     ],
@@ -242,167 +264,16 @@ export function DesignSettings() {
   };
 
   const resetToDefaults = () => {
-    if (confirm("Reset all design settings to default values?")) {
+    if (confirm(`Reset all design settings to ${currentResume.meta.templateId.toUpperCase()} template defaults?`)) {
+      const templateDefaults = getTemplateDefaults(currentResume.meta.templateId);
+      const themeColor = getTemplateThemeColor(currentResume.meta.templateId);
+      
       updateCurrentResume({
         meta: {
           ...currentResume.meta,
-          themeColor: "#000000",
-          layoutSettings: {
-            fontSize: 8.5,
-            lineHeight: 1.2,
-            sectionMargin: 8,
-            bulletMargin: 2,
-            useBullets: true,
-            fontFamily: "Open Sans",
-            themeColorTarget: ["headings", "links", "icons", "decorations"],
-            columnCount: 1,
-            headerPosition: "top",
-            leftColumnWidth: 30,
-            sectionOrder: SECTIONS.map((s) => s.id),
-            marginHorizontal: 15,
-            marginVertical: 15,
-            headerBottomMargin: 20,
-            sectionHeadingStyle: 1,
-            sectionHeadingAlign: "left",
-            sectionHeadingBold: true,
-            sectionHeadingCapitalization: "uppercase",
-            sectionHeadingSize: "M",
-            sectionHeadingIcons: "none",
-            summaryHeadingVisible: true,
-            workHeadingVisible: true,
-            educationHeadingVisible: true,
-            skillsHeadingVisible: true,
-            languagesHeadingVisible: true,
-            projectsHeadingVisible: true,
-            certificatesHeadingVisible: true,
-            interestsHeadingVisible: true,
-            publicationsHeadingVisible: true,
-            awardsHeadingVisible: true,
-            referencesHeadingVisible: true,
-            customHeadingVisible: true,
-            entryLayoutStyle: 1,
-            entryColumnWidth: "auto",
-            entryTitleSize: "M",
-            entrySubtitleStyle: "italic",
-            entrySubtitlePlacement: "nextLine",
-            entryIndentBody: false,
-            entryListStyle: "bullet",
-            personalDetailsAlign: "center",
-            personalDetailsArrangement: 1,
-            personalDetailsContactStyle: "icon",
-            personalDetailsIconStyle: 1,
-            nameSize: "M",
-            nameFontSize: 28,
-            nameLineHeight: 1.2,
-            nameBold: true,
-            nameFont: "body",
-            titleFontSize: 14,
-            titleLineHeight: 1.2,
-            titleBold: false,
-            titleItalic: true,
-            contactFontSize: 10,
-            contactBold: false,
-            contactItalic: false,
-            contactSeparator: "pipe",
-            showProfileImage: true,
-            profileImageSize: "M",
-            profileImageShape: "circle",
-            profileImageBorder: false,
-            skillsDisplayStyle: "grid",
-            skillsLevelStyle: 0,
-            skillsListStyle: "blank",
-            languagesListStyle: "bullet",
-            languagesNameBold: true,
-            languagesNameItalic: false,
-            languagesFluencyBold: false,
-            languagesFluencyItalic: false,
-            interestsListStyle: "bullet",
-            interestsNameBold: true,
-            interestsNameItalic: false,
-            interestsKeywordsBold: false,
-            interestsKeywordsItalic: false,
-            publicationsListStyle: "bullet",
-            publicationsNameBold: true,
-            publicationsNameItalic: false,
-            publicationsPublisherBold: false,
-            publicationsPublisherItalic: false,
-            publicationsUrlBold: false,
-            publicationsUrlItalic: false,
-            publicationsDateBold: false,
-            publicationsDateItalic: false,
-            awardsListStyle: "bullet",
-            awardsTitleBold: true,
-            awardsTitleItalic: false,
-            awardsAwarderBold: false,
-            awardsAwarderItalic: false,
-            awardsDateBold: false,
-            awardsDateItalic: false,
-            referencesListStyle: "bullet",
-            referencesNameBold: true,
-            referencesNameItalic: false,
-            referencesPositionBold: false,
-            referencesPositionItalic: false,
-            // Projects Defaults
-            projectsListStyle: "bullet",
-            projectsNameBold: true,
-            projectsNameItalic: false,
-            projectsDateBold: false,
-            projectsDateItalic: false,
-            projectsTechnologiesBold: false,
-            projectsTechnologiesItalic: false,
-            projectsAchievementsListStyle: "bullet",
-            projectsFeaturesBold: false,
-            projectsFeaturesItalic: false,
-            // Custom Section Defaults
-            customSectionListStyle: "bullet",
-            customSectionNameBold: true,
-            customSectionNameItalic: false,
-            customSectionDescriptionBold: false,
-            customSectionDescriptionItalic: false,
-            customSectionDateBold: false,
-            customSectionDateItalic: false,
-            customSectionUrlBold: false,
-            customSectionUrlItalic: false,
-            // Certificate Defaults
-            certificatesListStyle: "bullet",
-            certificatesNameBold: true,
-            certificatesNameItalic: false,
-            certificatesIssuerBold: false,
-            certificatesIssuerItalic: false,
-            certificatesDateBold: false,
-            certificatesDateItalic: false,
-            certificatesUrlBold: false,
-            certificatesUrlItalic: false,
-            certificatesDisplayStyle: "compact",
-            certificatesLevelStyle: 3,
-            // Experience Defaults
-            experienceCompanyListStyle: "none",
-            experienceCompanyBold: true,
-            experienceCompanyItalic: false,
-            experiencePositionBold: false,
-            experiencePositionItalic: false,
-            experienceWebsiteBold: false,
-            experienceWebsiteItalic: false,
-            experienceDateBold: false,
-            experienceDateItalic: false,
-            experienceAchievementsListStyle: "bullet",
-            experienceAchievementsBold: false,
-            experienceAchievementsItalic: false,
-            // Education Defaults
-            educationInstitutionListStyle: "none",
-            educationInstitutionBold: true,
-            educationInstitutionItalic: false,
-            educationDegreeBold: false,
-            educationDegreeItalic: false,
-            educationAreaBold: false,
-            educationAreaItalic: false,
-            educationDateBold: false,
-            educationDateItalic: false,
-            educationGpaBold: false,
-            educationGpaItalic: false,
-            educationCoursesBold: false,
-            educationCoursesItalic: false,
-          },
+          themeColor,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          layoutSettings: templateDefaults as any,
         },
       });
     }
@@ -410,20 +281,30 @@ export function DesignSettings() {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex items-center justify-between p-4 border-b shrink-0 bg-background z-10">
         <h2 className="font-semibold">Design Settings</h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={resetToDefaults}
-          title="Reset to Defaults"
-        >
-          <RotateCcw className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={allExpanded ? collapseAll : expandAll}
+            title={allExpanded ? "Collapse All" : "Expand All"}
+          >
+            <ChevronsUpDown className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={resetToDefaults}
+            title="Reset to Defaults"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-4 space-y-4 pb-20">
+      <div className="flex-1 overflow-y-auto border-b lg:border-none">
+        <div className="p-4 md:p-6 space-y-4 sm:pb-20">
           <PageLayoutSettings
             layoutSettings={layoutSettings}
             updateSetting={updateSetting}

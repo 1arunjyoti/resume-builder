@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   FileText,
@@ -9,13 +9,16 @@ import {
   Palette,
   FileType,
   ChevronDown,
+  Image as ImageIcon,
 } from "lucide-react";
 import type { Resume } from "@/db";
 import { useResumeStore } from "@/store/useResumeStore";
-import { useEffect } from "react";
+import dynamic from "next/dynamic";
 
 import { TEMPLATES, type TemplateType } from "@/lib/constants";
 import { generateDocx } from "@/lib/docx-generator";
+import { getTemplateDefaults, getTemplateThemeColor } from "@/lib/template-defaults";
+import type { LayoutSettings } from "@/db";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,38 +26,72 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+// Dynamically import PDFImageViewer for mobile (avoids SSR issues)
+const PDFImageViewer = dynamic(
+  () => import("./PDFImageViewer").then((mod) => mod.PDFImageViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    ),
+  },
+);
+
 // Dynamically import PDF generation to avoid SSR issues
 const generatePDFAsync = async (
   resume: Resume,
   template: TemplateType,
 ): Promise<Blob> => {
-  if (template === "creative") {
-    const { generateCreativePDF } =
-      await import("@/components/templates/CreativeTemplate");
-    return generateCreativePDF(resume);
+  // Pre-process image: Convert Blob to ObjectURL for PDF rendering
+  let processedResume = { ...resume };
+  let imageUrl: string | null = null;
+
+  if (resume.basics.image instanceof Blob) {
+    imageUrl = URL.createObjectURL(resume.basics.image);
+    processedResume = {
+      ...resume,
+      basics: {
+        ...resume.basics,
+        image: imageUrl,
+      },
+    };
   }
-  if (template === "modern") {
-    const { generateModernPDF } =
-      await import("@/components/templates/ModernTemplate");
-    return generateModernPDF(resume);
+
+  try {
+    if (template === "creative") {
+      const { generateCreativePDF } =
+        await import("@/components/templates/CreativeTemplate");
+      return await generateCreativePDF(processedResume);
+    }
+    if (template === "modern") {
+      const { generateModernPDF } =
+        await import("@/components/templates/ModernTemplate");
+      return await generateModernPDF(processedResume);
+    }
+    if (template === "professional") {
+      const { generateProfessionalPDF } =
+        await import("@/components/templates/ProfessionalTemplate");
+      return await generateProfessionalPDF(processedResume);
+    }
+    if (template === "elegant") {
+      const { generateElegantPDF } =
+        await import("@/components/templates/ElegantTemplate");
+      return await generateElegantPDF(processedResume);
+    }
+    if (template === "classic") {
+      const { generateClassicPDF } =
+        await import("@/components/templates/ClassicTemplate");
+      return await generateClassicPDF(processedResume);
+    }
+    const { generatePDF } = await import("@/components/templates/ATSTemplate");
+    return await generatePDF(processedResume);
+  } finally {
+    if (imageUrl) {
+      URL.revokeObjectURL(imageUrl);
+    }
   }
-  if (template === "professional") {
-    const { generateProfessionalPDF } =
-      await import("@/components/templates/ProfessionalTemplate");
-    return generateProfessionalPDF(resume);
-  }
-  if (template === "elegant") {
-    const { generateElegantPDF } =
-      await import("@/components/templates/ElegantTemplate");
-    return generateElegantPDF(resume);
-  }
-  if (template === "classic") {
-    const { generateClassicPDF } =
-      await import("@/components/templates/ClassicTemplate");
-    return generateClassicPDF(resume);
-  }
-  const { generatePDF } = await import("@/components/templates/ATSTemplate");
-  return generatePDF(resume);
 };
 
 interface PDFPreviewProps {
@@ -65,6 +102,7 @@ export function PDFPreview({ resume }: PDFPreviewProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Ref to track usage to avoid re-dependency loop
   const pdfUrlRef = useRef<string | null>(null);
@@ -75,6 +113,23 @@ export function PDFPreview({ resume }: PDFPreviewProps) {
   );
 
   const { updateCurrentResume } = useResumeStore();
+
+  // Detect mobile device on client side
+  useEffect(() => {
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor;
+      const isMobileDevice =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          userAgent,
+        );
+      const isSmallScreen = window.innerWidth < 768;
+      setIsMobile(isMobileDevice || isSmallScreen);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Sync internal state if resume prop changes (e.g. fresh load)
   useEffect(() => {
@@ -104,7 +159,7 @@ export function PDFPreview({ resume }: PDFPreviewProps) {
     } finally {
       setIsGenerating(false);
     }
-  }, [resume, selectedTemplate]); // Removed pdfUrl from dependencies
+  }, [resume, selectedTemplate]);
 
   // Debounced auto-generation
   useEffect(() => {
@@ -124,11 +179,17 @@ export function PDFPreview({ resume }: PDFPreviewProps) {
       pdfUrlRef.current = null;
     }
 
-    // Persist change
+    // Get template-specific defaults
+    const templateDefaults = getTemplateDefaults(id);
+    const themeColor = getTemplateThemeColor(id);
+
+    // Persist change with template defaults
     updateCurrentResume({
       meta: {
         ...resume.meta,
         templateId: id,
+        themeColor,
+        layoutSettings: templateDefaults as LayoutSettings,
       },
     });
   };
@@ -152,7 +213,6 @@ export function PDFPreview({ resume }: PDFPreviewProps) {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error("DOCX generation error:", err);
-      // Optional: Add toast notification here
     }
   }, [resume]);
 
@@ -203,6 +263,23 @@ export function PDFPreview({ resume }: PDFPreviewProps) {
                   <FileType className="h-4 w-4" />
                   Download DOCX
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={async () => {
+                    try {
+                      if (!pdfUrl) return;
+                      const { convertPdfToJpg, downloadJpgs } =
+                        await import("@/lib/pdf-utils");
+                      const jpgUrls = await convertPdfToJpg(pdfUrl);
+                      downloadJpgs(jpgUrls, resume.meta.title || "resume");
+                    } catch (err) {
+                      console.error("Failed to download JPG", err);
+                    }
+                  }}
+                  className="cursor-pointer"
+                >
+                  <ImageIcon className="h-4 w-4" />
+                  Download JPG
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -237,7 +314,7 @@ export function PDFPreview({ resume }: PDFPreviewProps) {
           <div className="text-center text-destructive py-8">{error}</div>
         )}
         {!pdfUrl && !error && (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground min-h-[400px]">
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground min-h-100">
             <FileText className="h-16 w-16 mb-4 opacity-50" />
             <p>Click &quot;Generate PDF&quot; to preview your resume</p>
             <p className="text-sm mt-2">
@@ -248,10 +325,11 @@ export function PDFPreview({ resume }: PDFPreviewProps) {
             </p>
           </div>
         )}
-        {pdfUrl && (
+        {pdfUrl && isMobile && <PDFImageViewer url={pdfUrl} />}
+        {pdfUrl && !isMobile && (
           <iframe
             src={pdfUrl}
-            className="w-full h-full min-h-[600px] rounded-lg border bg-white"
+            className="w-full h-full min-h-150 rounded-lg border bg-white"
             title="PDF Preview"
           />
         )}

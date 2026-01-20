@@ -57,7 +57,10 @@ import {
   FileUp,
   Info,
   FileJson,
+  LayoutTemplate,
+  Settings,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import {
   Sheet,
@@ -67,17 +70,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { ResetConfirmDialog } from "@/components/ResetConfirmDialog";
 import { ATSScore } from "@/components/editor/ATSScore";
+import { DisclaimerDialog } from "@/components/DisclaimerDialog";
+import { Separator } from "@/components/ui/separator";
 
 function EditorContent() {
   const searchParams = useSearchParams();
@@ -96,6 +94,9 @@ function EditorContent() {
     (state) => state.updateCurrentResume,
   );
   const resetResume = useResumeStore((state) => state.resetResume);
+
+  // DisclaimerDialog is now imported from components/DisclaimerDialog
+  // but we need to add the import at the top first.
 
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("basics");
@@ -275,7 +276,7 @@ function EditorContent() {
 
           <div className="flex items-center gap-2 shrink-0">
             {/* View Toggle */}
-            <div className="hidden sm:flex items-center gap-1 bg-muted p-1 rounded-lg mr-2 border">
+            <div className="hidden lg:flex items-center gap-1 bg-muted p-1 rounded-lg mr-2 border">
               <Button
                 variant="ghost"
                 size="sm"
@@ -305,19 +306,17 @@ function EditorContent() {
             </div>
 
             {/* Desktop Actions */}
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2">
               <ATSScore resume={currentResume} />
-              {process.env.NODE_ENV === "development" && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleFillSampleData}
-                  className="text-primary border-primary/30 hover:bg-primary/10"
-                >
-                  <Wand2 className="h-4 w-4" />
-                  Fill Sample
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleFillSampleData}
+                className="text-primary border-primary/30 hover:bg-primary/10"
+              >
+                <Wand2 className="h-4 w-4" />
+                Fill Sample
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -358,62 +357,11 @@ function EditorContent() {
               <ThemeToggle />
 
               {/* Disclaimer */}
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-primary/30 hover:bg-primary/10"
-                  >
-                    <Info className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Disclaimer</DialogTitle>
-                    <DialogDescription asChild>
-                      <div className="text-muted-foreground text-sm">
-                        <div className="mt-4">
-                          <h2 className="font-semibold text-lg text-foreground">
-                            How to save your resume data:
-                          </h2>
-                          <p className="mt-2">
-                            1. Click on the <b>Save</b> button to save your
-                            resume data to your browser&apos;s local storage.
-                            <b>(Not recommended to use this method)</b>
-                          </p>
-                          <p className="mt-1">
-                            2. <b>(Better)</b> Alternately, you can also export
-                            your resume data as a JSON file.
-                          </p>
-                          <p className="mt-1">
-                            3. Then import your resume data from the downloaded{" "}
-                            <b>JSON</b> file.
-                          </p>
-                        </div>
-
-                        <div className="mt-6 mb-2">
-                          <h2 className="font-semibold text-lg text-foreground">
-                            How to use the resume builder:
-                          </h2>
-                          <p className="mt-2">
-                            1. Click on the <b>Content</b> button to edit your
-                            resume content.
-                          </p>
-                          <p className="mt-1">
-                            2. Click on the <b>Customize</b> button to customize
-                            your resume.
-                          </p>
-                        </div>
-                      </div>
-                    </DialogDescription>
-                  </DialogHeader>
-                </DialogContent>
-              </Dialog>
+              <DisclaimerDialog />
             </div>
 
             {/* Mobile Actions */}
-            <div className="flex sm:hidden items-center gap-1">
+            <div className="flex lg:hidden items-center gap-1">
               <Button
                 variant="ghost"
                 size="icon"
@@ -445,63 +393,152 @@ function EditorContent() {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right">
+                <SheetContent
+                  side="right"
+                  className="w-75 sm:w-100 overflow-y-auto p-4"
+                >
                   <SheetHeader className="text-left border-b pb-4">
-                    <SheetTitle>Editor Actions</SheetTitle>
+                    <SheetTitle>Editor Menu</SheetTitle>
                     <SheetDescription>
-                      Export or reset your resume data.
+                      Manage your resume and editor settings.
                     </SheetDescription>
                   </SheetHeader>
-                  <div className="flex flex-col gap-4 mt-4">
-                    <Button
-                      variant="outline"
-                      className="justify-start text-foreground"
-                      onClick={handleImportJSON}
-                    >
-                      <FileUp className="h-4 w-4 mr-2" />
-                      Import JSON
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="justify-start text-foreground"
-                      onClick={handleExportJSON}
-                    >
-                      <FileDown className="h-4 w-4 mr-2" />
-                      Export JSON
-                    </Button>
-                    <ResetConfirmDialog
-                      onConfirm={handleReset}
-                      trigger={
+
+                  <div className="flex flex-col gap-6 mt-2">
+                    {/* Section: Resume Actions */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 px-1">
+                        <Settings className="w-4 h-4 text-muted-foreground" />
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Resume Actions
+                        </h4>
+                      </div>
+                      <div className="grid gap-2">
+                        <Button
+                          variant="outline"
+                          className="justify-start text-foreground h-10 bg-background"
+                          onClick={handleImportJSON}
+                        >
+                          <FileDown className="h-4 w-4" />
+                          Import JSON
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="justify-start text-foreground h-10 bg-background"
+                          onClick={handleExportJSON}
+                        >
+                          <FileUp className="h-4 w-4" />
+                          Export JSON
+                        </Button>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Section: View & Design */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 px-1">
+                        <LayoutTemplate className="w-4 h-4 text-muted-foreground" />
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          View & Design
+                        </h4>
+                      </div>
+
+                      {/* View Mode Toggle */}
+                      <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-lg">
                         <Button
                           variant="ghost"
-                          className="justify-start text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                          size="sm"
+                          className={cn(
+                            "h-8 transition-all duration-200",
+                            view === "content"
+                              ? "bg-background text-foreground shadow-sm hover:bg-background/90"
+                              : "text-muted-foreground hover:text-foreground hover:bg-transparent",
+                          )}
+                          onClick={() => setView("content")}
                         >
-                          <RotateCcw className="h-4 w-4 mr-2" />
-                          Reset All Data
+                          <PenLine className="h-3.5 w-3.5 mr-2" />
+                          Content
                         </Button>
-                      }
-                    />
-                    <div className="h-px bg-border my-2" />
-                    <p className="text-xs text-muted-foreground font-medium px-2">
-                      View Mode
-                    </p>
-                    <Button
-                      variant={view === "content" ? "secondary" : "ghost"}
-                      className="justify-start"
-                      onClick={() => setView("content")}
-                    >
-                      <PenLine className="h-4 w-4 mr-2" />
-                      Content Editor
-                    </Button>
-                    <Button
-                      variant={view === "customize" ? "secondary" : "ghost"}
-                      className="justify-start"
-                      onClick={() => setView("customize")}
-                    >
-                      <Palette className="h-4 w-4 mr-2" />
-                      Customize Design
-                    </Button>
-                    {/* Add more mobile menu items here if needed */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={cn(
+                            "h-8 transition-all duration-200",
+                            view === "customize"
+                              ? "bg-background text-foreground shadow-sm hover:bg-background/90"
+                              : "text-muted-foreground hover:text-foreground hover:bg-transparent",
+                          )}
+                          onClick={() => setView("customize")}
+                        >
+                          <Palette className="h-3.5 w-3.5 mr-2" />
+                          Customize
+                        </Button>
+                      </div>
+
+                      {/* Theme Toggle */}
+                      <div className="flex items-center justify-between p-2 rounded-md border bg-background/50">
+                        <span className="text-sm font-medium pl-1">
+                          Appearance
+                        </span>
+                        <ThemeToggle />
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Section: Tools */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 px-1">
+                        <Wrench className="w-4 h-4 text-muted-foreground" />
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Tools & Help
+                        </h4>
+                      </div>
+                      <div className="space-y-2">
+                        <ATSScore
+                          resume={currentResume}
+                          className="w-full justify-start h-10 px-4 bg-background border-primary/10"
+                        />
+
+                        <Button
+                          variant="outline"
+                          className="justify-start w-full h-10 border-dashed"
+                          onClick={handleFillSampleData}
+                        >
+                          <Wand2 className="h-4 w-4" />
+                          Fill Sample Data
+                        </Button>
+
+                        <DisclaimerDialog
+                          trigger={
+                            <Button
+                              variant="ghost"
+                              className="justify-start w-full h-10 border"
+                            >
+                              <Info className="h-4 w-4" />
+                              Help & Instructions
+                            </Button>
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div className="mt-auto pt-2">
+                      <ResetConfirmDialog
+                        onConfirm={handleReset}
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            className="justify-start w-full text-destructive h-10 border"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                            Reset All Data
+                          </Button>
+                        }
+                      />
+                    </div>
                   </div>
                 </SheetContent>
               </Sheet>
@@ -513,31 +550,43 @@ function EditorContent() {
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 max-w-8xl grid grid-cols-1 lg:grid-cols-2 gap-8 overflow-hidden">
         {/* Left Side - Editor Controls */}
-        <div className="min-h-0 overflow-hidden flex flex-col border-r bg-background/50">
+        <div className="min-h-0 overflow-hidden flex flex-col lg:border-r bg-background/50">
           {view === "customize" ? (
-            <div className="h-full overflow-y-auto p-4 md:p-6 scrollbar-hide">
-              <DesignSettings />
-            </div>
+            <DesignSettings />
           ) : (
             <Tabs
               value={activeTab}
               onValueChange={setActiveTab}
-              orientation="vertical"
-              className="flex-row h-full"
+              orientation="horizontal"
+              className="flex flex-col md:flex-row h-full"
             >
-              {/* Vertical Sidebar */}
-              <div className="w-12.5 md:w-40 lg:w-45 border-r h-full overflow-y-auto bg-muted/10 shrink-0">
+              {/* Mobile Horizontal Tab Bar */}
+              <div className="md:hidden w-full border-b bg-muted/10 shrink-0 overflow-x-auto scrollbar-hide">
+                <TabsList className="bg-transparent flex items-center justify-start p-2 gap-2 h-auto w-max rounded-none">
+                  {tabs.map((tab) => (
+                    <TabsTrigger
+                      key={tab.id}
+                      value={tab.id}
+                      className="flex-col gap-1 px-3 py-2 h-auto text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all rounded-md min-w-17.5"
+                    >
+                      <tab.icon className="h-4 w-4 shrink-0 mb-1" />
+                      <span className="truncate max-w-20">{tab.label}</span>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+
+              {/* Desktop Vertical Sidebar */}
+              <div className="hidden md:block w-40 lg:w-45 border-r h-full overflow-y-auto bg-muted/10 shrink-0">
                 <TabsList className="bg-transparent flex flex-col items-stretch justify-start p-2 gap-1 h-auto w-full rounded-none">
                   {tabs.map((tab) => (
                     <TabsTrigger
                       key={tab.id}
                       value={tab.id}
-                      className="justify-center md:justify-start gap-3 px-2 md:px-3 py-2.5 h-auto text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all w-full mb-1"
+                      className="justify-start gap-3 px-3 py-2.5 h-auto text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all w-full mb-1"
                     >
                       <tab.icon className="h-4 w-4 shrink-0" />
-                      <span className="hidden md:block truncate">
-                        {tab.label}
-                      </span>
+                      <span className="truncate">{tab.label}</span>
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -697,7 +746,7 @@ function EditorContent() {
           } overflow-y-auto py-6 md:py-8 pl-1`}
         >
           <div className="min-h-full">
-            <div className="mb-4 flex items-center justify-between lg:hidden">
+            <div className="mb-4 pl-4 flex items-center justify-between lg:hidden">
               <h3 className="font-medium text-muted-foreground">
                 Live Preview
               </h3>

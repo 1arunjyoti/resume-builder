@@ -4,7 +4,7 @@ import Dexie, { type EntityTable } from 'dexie';
 export interface ResumeBasics {
   name: string;
   label: string;
-  image?: Blob;
+  image?: Blob | string;
   email: string;
   phone: string;
   url: string;

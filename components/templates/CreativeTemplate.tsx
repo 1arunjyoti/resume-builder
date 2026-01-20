@@ -7,9 +7,11 @@ import {
   Font,
   pdf,
   Link,
+  Image,
 } from "@react-pdf/renderer";
 import type { Resume, LayoutSettings } from "@/db";
 import { PDFRichText } from "./PDFRichText";
+import { getTemplateDefaults } from "@/lib/template-defaults";
 
 // Register fonts
 Font.register({
@@ -306,12 +308,13 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
   const { basics, work, education, skills, projects } = resume;
   const themeColor = resume.meta.themeColor || "#3b82f6";
 
-  const settings = resume.meta.layoutSettings || {
-    fontSize: 8.5,
-    lineHeight: 1.2,
-    sectionMargin: 8,
-    bulletMargin: 2,
-    useBullets: true,
+  // Merge template defaults with resume settings
+  const templateDefaults = getTemplateDefaults(resume.meta.templateId || 'creative');
+  const settings = { ...templateDefaults, ...resume.meta.layoutSettings } as LayoutSettings & {
+    fontSize: number;
+    lineHeight: number;
+    sectionMargin: number;
+    bulletMargin: number;
   };
 
   const styles = createStyles(themeColor, settings);
@@ -335,11 +338,36 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
     return levels[level.toLowerCase()] || 60;
   };
 
+  const renderProfileImage = () => {
+    if (!basics.image || !settings.showProfileImage) return null;
+
+    const sizeMap = { S: 50, M: 80, L: 120 };
+    const size = sizeMap[settings.profileImageSize || "M"];
+
+    return (
+      // eslint-disable-next-line jsx-a11y/alt-text
+      <Image
+        src={basics.image}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: settings.profileImageShape === "square" ? 0 : size / 2,
+          borderWidth: settings.profileImageBorder ? 1 : 0,
+          borderColor: "#fff",
+          objectFit: "cover",
+          marginBottom: 15,
+          alignSelf: "center",
+        }}
+      />
+    );
+  };
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Sidebar */}
         <View style={styles.sidebar}>
+          {renderProfileImage()}
           {/* Contact */}
           <View style={styles.sidebarSection}>
             <Text style={styles.sidebarTitle}>Contact</Text>

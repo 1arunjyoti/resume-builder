@@ -145,7 +145,7 @@ export default function TemplatesPage() {
             <Layout className="h-5 w-5" />
             Template Catalog
           </div>
-          <div className="w-[100px] flex justify-end">
+          <div className="w-25 flex justify-end">
             <ThemeToggle />
           </div>
         </div>

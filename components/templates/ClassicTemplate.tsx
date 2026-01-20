@@ -11,6 +11,7 @@ import {
 } from "@react-pdf/renderer";
 import type { Resume } from "@/db";
 import { PDFRichText } from "./PDFRichText";
+import { getTemplateDefaults } from "@/lib/template-defaults";
 
 // Helper to convert mm to pt (approximate)
 const mmToPt = (mm: number) => mm * 2.835;
@@ -108,46 +109,39 @@ export function ClassicTemplate({ resume }: ClassicTemplateProps) {
     custom,
   } = resume;
 
-  const settings = resume.meta.layoutSettings || {};
+  // Merge template defaults with resume settings to ensure all values are defined
+  const templateDefaults = getTemplateDefaults(resume.meta.templateId || 'classic');
+  const settings = { ...templateDefaults, ...resume.meta.layoutSettings };
 
   // Defaults
-  const fontSize = settings.fontSize || 10;
-  const lineHeight = settings.lineHeight || 1.3;
-  const sectionMargin = settings.sectionMargin || 15;
-  const bulletMargin = settings.bulletMargin || 3;
-  const marginH = settings.marginHorizontal
-    ? mmToPt(settings.marginHorizontal)
-    : 40;
-  const marginV = settings.marginVertical
-    ? mmToPt(settings.marginVertical)
-    : 40;
+  const fontSize = settings.fontSize;
+  const lineHeight = settings.lineHeight;
+  const sectionMargin = settings.sectionMargin;
+  const bulletMargin = settings.bulletMargin;
+  const marginH = mmToPt(settings.marginHorizontal);
+  const marginV = mmToPt(settings.marginVertical);
 
   // Layout Controls
-  const columnCount = settings.columnCount || 1;
-  const leftColumnWidthPercent = settings.leftColumnWidth || 30; // Default 30%
+  const columnCount = settings.columnCount;
+  const leftColumnWidthPercent = settings.leftColumnWidth;
   const rightColumnWidthPercent = 100 - leftColumnWidthPercent;
-  const layoutHeaderPos = settings.headerPosition || "center";
+  const layoutHeaderPos = settings.headerPosition;
   const headerAlign: "left" | "center" | "right" =
     layoutHeaderPos === "left" || layoutHeaderPos === "right"
       ? layoutHeaderPos
       : "center";
 
   // Typography Constants
-  const selectedFont = settings.fontFamily || "Times-Roman";
+  const selectedFont = settings.fontFamily;
   const baseFont = selectedFont;
   const boldFont = selectedFont;
   const italicFont = selectedFont;
 
   // Helper to get color
-  const colorTargets = settings.themeColorTarget || [
-    "headings",
-    "links",
-    "icons",
-    "decorations",
-  ];
+  const colorTargets = settings.themeColorTarget;
   const getColor = (target: string, fallback: string = "#000000") => {
     return colorTargets.includes(target)
-      ? resume.meta.themeColor || "#000000"
+      ? resume.meta.themeColor
       : fallback;
   };
 
@@ -164,7 +158,7 @@ export function ClassicTemplate({ resume }: ClassicTemplateProps) {
     },
     // Header
     header: {
-      marginBottom: settings.headerBottomMargin || 20,
+      marginBottom: settings.headerBottomMargin,
       textAlign: headerAlign,
       borderBottomWidth: settings.sectionHeadingStyle === 1 ? 3 : 0, // Example variant
       borderBottomColor: getColor("decorations"),
@@ -173,7 +167,7 @@ export function ClassicTemplate({ resume }: ClassicTemplateProps) {
       width: "100%",
     },
     name: {
-      fontSize: settings.nameFontSize || 28,
+      fontSize: settings.nameFontSize,
       fontFamily:
         settings.nameFont === "creative"
           ? "Helvetica"
@@ -185,13 +179,13 @@ export function ClassicTemplate({ resume }: ClassicTemplateProps) {
           ? "bold"
           : "normal",
       marginBottom: 8,
-      lineHeight: settings.nameLineHeight || 1.2,
+      lineHeight: settings.nameLineHeight,
       textTransform: "uppercase",
       letterSpacing: 1.5,
       color: getColor("name"),
     },
     label: {
-      fontSize: settings.titleFontSize || fontSize + 4,
+      fontSize: settings.titleFontSize,
       marginBottom: 6,
       fontWeight: settings.titleBold ? "bold" : "normal",
       fontStyle: settings.titleItalic ? "italic" : "normal",
@@ -200,7 +194,7 @@ export function ClassicTemplate({ resume }: ClassicTemplateProps) {
         : settings.titleItalic
           ? italicFont
           : baseFont,
-      lineHeight: settings.titleLineHeight || 1.2,
+      lineHeight: settings.titleLineHeight,
     },
     contactRow: {
       flexDirection: "row",
@@ -213,7 +207,7 @@ export function ClassicTemplate({ resume }: ClassicTemplateProps) {
       flexWrap: "wrap",
       rowGap: 4,
       columnGap: 0,
-      fontSize: settings.contactFontSize || fontSize,
+      fontSize: settings.contactFontSize,
       marginTop: 4,
     },
 
@@ -249,13 +243,13 @@ export function ClassicTemplate({ resume }: ClassicTemplateProps) {
       ...(settings.sectionHeadingStyle === 1 && {
         borderBottomWidth: 1,
         borderBottomColor: getColor("decorations"),
-        paddingBottom: 2,
+        paddingBottom: 5,
       }),
       // Style 2: No Decoration (Text only) - No extra styles needed
 
       // Style 3: Double Underline
       ...(settings.sectionHeadingStyle === 3 && {
-        borderBottomWidth: 3,
+        borderBottomWidth: 1,
         borderBottomColor: getColor("decorations"),
         borderStyle: "solid", // Double border simulation not natively supported in react-pdf this way, using thick solid for now or need nested view?
         // Actually, react-pdf supports 'dashed', 'dotted', 'solid'. 'double' is not standard here.
@@ -266,7 +260,7 @@ export function ClassicTemplate({ resume }: ClassicTemplateProps) {
         // WAIT: The prompt asked for "Double Underline".
         // To do true double, we'd need to render two lines. Complex in just styles object.
         // Let's implement it as a thick border to start.
-        paddingBottom: 2,
+        paddingBottom: 5,
       }),
 
       // Style 4: Background Highlight
@@ -277,13 +271,13 @@ export function ClassicTemplate({ resume }: ClassicTemplateProps) {
         // For safe implementation, let's use a very light gray or primary/10
         // React-PDF supports rgba().
         paddingVertical: 4,
-        paddingHorizontal: 12,
+        paddingHorizontal: 8,
         borderRadius: 4,
       }),
 
       // Style 5: Left Accent
       ...(settings.sectionHeadingStyle === 5 && {
-        borderLeftWidth: 4,
+        borderLeftWidth: 2,
         borderLeftColor: getColor("decorations"),
         paddingLeft: 8,
       }),
@@ -302,7 +296,7 @@ export function ClassicTemplate({ resume }: ClassicTemplateProps) {
         borderBottomWidth: 1,
         borderBottomColor: getColor("decorations"),
         borderStyle: "dashed",
-        paddingBottom: 2,
+        paddingBottom: 5,
       }),
 
       // Style 8: Dotted Underline
@@ -310,7 +304,7 @@ export function ClassicTemplate({ resume }: ClassicTemplateProps) {
         borderBottomWidth: 1,
         borderBottomColor: getColor("decorations"),
         borderStyle: "dotted",
-        paddingBottom: 2,
+        paddingBottom: 5,
       }),
     },
     sectionTitle: {
@@ -318,7 +312,7 @@ export function ClassicTemplate({ resume }: ClassicTemplateProps) {
         settings.sectionHeadingSize === "L" ? fontSize + 6 : fontSize + 4,
       fontFamily: settings.sectionHeadingBold ? boldFont : baseFont,
       fontWeight: settings.sectionHeadingBold ? "bold" : "normal",
-      textTransform: settings.sectionHeadingCapitalization || "uppercase",
+      textTransform: settings.sectionHeadingCapitalization,
       letterSpacing: 1,
       color: getColor("headings"),
       // backgroundColor: "#fff", // Removed this as it might interfere with Style 4
@@ -421,7 +415,7 @@ export function ClassicTemplate({ resume }: ClassicTemplateProps) {
     if (!basics.image || !settings.showProfileImage) return null;
 
     const sizeMap = { S: 50, M: 80, L: 120 };
-    const size = sizeMap[settings.profileImageSize || "M"];
+    const size = sizeMap[settings.profileImageSize];
 
     return (
       // @react-pdf/renderer Image does not support alt prop
@@ -446,7 +440,7 @@ export function ClassicTemplate({ resume }: ClassicTemplateProps) {
     const isCenter = headerAlign === "center";
 
     // New Settings
-    const contactLayout = settings.personalDetailsArrangement || 1; // 1=Row, 2=Column
+    const contactLayout = settings.personalDetailsArrangement;
 
     // Helper to render an item
     // Helper to render an item
@@ -1099,7 +1093,7 @@ export function ClassicTemplate({ resume }: ClassicTemplateProps) {
   const renderSkills = () => {
     if (!skills || skills.length === 0) return null;
 
-    const listStyle = settings.skillsListStyle || "blank"; // "bullet" | "dash" | "inline" | "blank"
+    const listStyle = settings.skillsListStyle;
     const levelStyle = settings.skillsLevelStyle ?? 0; // Default 0 (None)
 
     // Helper to render level

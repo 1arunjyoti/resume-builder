@@ -7,9 +7,11 @@ import {
   Font,
   pdf,
   Link,
+  Image,
 } from "@react-pdf/renderer";
 import type { Resume, LayoutSettings } from "@/db";
 import { PDFRichText } from "./PDFRichText";
+import { getTemplateDefaults } from "@/lib/template-defaults";
 
 // Register fonts
 Font.register({
@@ -285,12 +287,14 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
   const { basics, work, education, skills, projects } = resume;
   const themeColor = resume.meta.themeColor || "#10b981"; // Default to emerald green for modern
 
-  const settings = resume.meta.layoutSettings || {
-    fontSize: 8.5,
-    lineHeight: 1.2,
-    sectionMargin: 8,
-    bulletMargin: 2,
-    useBullets: true,
+  // Merge template defaults with resume settings
+  const templateDefaults = getTemplateDefaults(resume.meta.templateId || 'modern');
+  const settings = { ...templateDefaults, ...resume.meta.layoutSettings } as LayoutSettings & {
+    fontSize: number;
+    lineHeight: number;
+    sectionMargin: number;
+    bulletMargin: number;
+    fontFamily?: string;
   };
 
   const styles = createStyles(themeColor, settings);
@@ -305,11 +309,35 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
     });
   };
 
+  const renderProfileImage = () => {
+    if (!basics.image || !settings.showProfileImage) return null;
+
+    const sizeMap = { S: 50, M: 80, L: 120 };
+    const size = sizeMap[settings.profileImageSize || "M"];
+
+    return (
+      // eslint-disable-next-line jsx-a11y/alt-text
+      <Image
+        src={basics.image}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: settings.profileImageShape === "square" ? 0 : size / 2,
+          borderWidth: settings.profileImageBorder ? 1 : 0,
+          borderColor: themeColor,
+          objectFit: "cover",
+          marginBottom: 10,
+        }}
+      />
+    );
+  };
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
+          {renderProfileImage()}
           <Text style={styles.name}>{basics.name || "Your Name"}</Text>
           {basics.label && <Text style={styles.title}>{basics.label}</Text>}
 

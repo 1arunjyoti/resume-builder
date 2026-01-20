@@ -129,7 +129,7 @@ export function SectionHeadingSettings({
                 !(layoutSettings.sectionHeadingBold ?? true),
               )
             }
-            className={`w-full h-[34px] rounded-md border text-xs font-medium transition-all ${
+            className={`w-full h-8.5 rounded-md border text-xs font-medium transition-all ${
               (layoutSettings.sectionHeadingBold ?? true)
                 ? "border-primary bg-primary/5 text-primary ring-1 ring-primary/20"
                 : "border-border bg-background hover:bg-muted"

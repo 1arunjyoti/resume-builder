@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 
 interface ATSScoreProps {
   resume: Resume | null;
+  className?: string; // Allow custom styling for the trigger button
 }
 
 function CheckItem({ check }: { check: ATSCheck }) {
@@ -83,7 +84,7 @@ function CheckItem({ check }: { check: ATSCheck }) {
   );
 }
 
-export function ATSScore({ resume }: ATSScoreProps) {
+export function ATSScore({ resume, className }: ATSScoreProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const scoreResult = useMemo(() => {
@@ -111,7 +112,17 @@ export function ATSScore({ resume }: ATSScoreProps) {
         <Button
           variant="outline"
           size="sm"
-          className="text-primary border-primary/30 hover:bg-primary/10 gap-2"
+          className={cn(
+            "text-primary border-primary/30 hover:bg-primary/10 gap-2",
+            // If className is provided, it can override or append to base styles
+            // But to make it fully flexible for mobile menu (e.g. full width, justify start),
+            // we might want to allow overriding variants or just append.
+            // For now, appending is safe.
+            // Actually, for mobile menu we want "w-full justify-start".
+            // The default "text-primary..." might conflict or be desired.
+            // Let's us `cn` to merge properly.
+            className,
+          )}
         >
           <Target className="size-4" />
           Check ATS Score

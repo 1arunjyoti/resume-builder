@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { db, type Resume } from '@/db';
+import { db, type Resume, type LayoutSettings } from '@/db';
 import { v4 as uuidv4 } from 'uuid';
+import { getTemplateDefaults, getTemplateThemeColor } from '@/lib/template-defaults';
 
 interface ResumeState {
   // Current active resume being edited
@@ -20,208 +21,43 @@ interface ResumeState {
   clearError: () => void;
 }
 
-const createEmptyResume = (title: string = 'Untitled Resume', templateId: string = 'ats'): Resume => ({
-  id: uuidv4(),
-  meta: {
-    title,
-    templateId,
-    themeColor: '#000000',
-    lastModified: new Date().toISOString(),
-    layoutSettings: {
-      fontSize: 8.5,
-      lineHeight: 1.2,
-      sectionMargin: 8,
-      bulletMargin: 2,
-      useBullets: true,
-      fontFamily: 'Roboto',
-      themeColorTarget: ["headings", "links", "icons", "decorations"],
-      columnCount: 1,
-      headerPosition: 'top',
-      leftColumnWidth: 30,
-      marginHorizontal: 15,
-      marginVertical: 15,
-      headerBottomMargin: 20,
-      sectionOrder: [
-        'work',
-        'education',
-        'skills',
-        'projects',
-        'certificates',
-        'languages',
-        'interests',
-        'publications',
-        'awards',
-        'references',
-        'custom'
-      ],
-      sectionHeadingStyle: 4,
-      sectionHeadingAlign: 'left',
-      sectionHeadingBold: false,
-      sectionHeadingCapitalization: 'uppercase',
-      sectionHeadingSize: 'M',
-      sectionHeadingIcons: 'none',
-      // Heading Visibility
-      summaryHeadingVisible: true,
-      workHeadingVisible: true,
-      educationHeadingVisible: true,
-      skillsHeadingVisible: true,
-      projectsHeadingVisible: true,
-      certificatesHeadingVisible: true,
-      languagesHeadingVisible: true,
-      interestsHeadingVisible: true,
-      publicationsHeadingVisible: true,
-      awardsHeadingVisible: true,
-      referencesHeadingVisible: true,
-      customHeadingVisible: true,
-      entryLayoutStyle: 1,
-      entryColumnWidth: 'auto',
-      entryTitleSize: 'M',
-      entrySubtitleStyle: 'italic',
-      entrySubtitlePlacement: 'nextLine',
-      entryIndentBody: false,
-      entryListStyle: 'bullet',
-      personalDetailsAlign: 'center',
-      personalDetailsArrangement: 1,
-      personalDetailsContactStyle: 'icon',
-      personalDetailsIconStyle: 1,
-      nameSize: 'M',
-      nameBold: true,
-      nameFont: 'body',
-      skillsDisplayStyle: 'grid',
-      skillsLevelStyle: 3,
-      skillsListStyle: 'bullet',
-      languagesListStyle: 'bullet',
-      languagesNameBold: true,
-      languagesNameItalic: false,
-      languagesFluencyBold: false,
-      languagesFluencyItalic: false,
-      interestsListStyle: 'bullet',
-      interestsNameBold: true,
-      interestsNameItalic: false,
-      interestsKeywordsBold: false,
-      interestsKeywordsItalic: false,
-      certificatesDisplayStyle: 'grid',
-      certificatesLevelStyle: 3,
-      nameFontSize: 0,
-      nameLineHeight: 0,
-      titleFontSize: 0,
-      titleLineHeight: 0,
-      titleBold: false,
-      titleItalic: false,
-      contactFontSize: 0,
-      contactBold: false,
-      contactItalic: false,
-      contactSeparator: 'pipe',
-      showProfileImage: false,
-      profileImageSize: 'M',
-      profileImageShape: 'circle',
-      profileImageBorder: false,
-      // Experience
-      experienceCompanyListStyle: 'bullet',
-      experienceCompanyBold: true,
-      experienceCompanyItalic: false,
-      experiencePositionBold: true,
-      experiencePositionItalic: false,
-      experienceWebsiteBold: false,
-      experienceWebsiteItalic: false,
-      experienceDateBold: false,
-      experienceDateItalic: false,
-      experienceAchievementsListStyle: 'bullet',
-      experienceAchievementsBold: false,
-      experienceAchievementsItalic: false,
-      // Education
-      educationInstitutionListStyle: 'bullet',
-      educationInstitutionBold: true,
-      educationInstitutionItalic: false,
-      educationDegreeBold: false,
-      educationDegreeItalic: false,
-      educationAreaBold: false,
-      educationAreaItalic: false,
-      educationDateBold: false,
-      educationDateItalic: false,
-      educationGpaBold: false,
-      educationGpaItalic: false,
-      educationCoursesBold: false,
-      educationCoursesItalic: false,
-      // Publications
-      publicationsListStyle: 'bullet',
-      publicationsNameBold: true,
-      publicationsNameItalic: false,
-      publicationsPublisherBold: false,
-      publicationsPublisherItalic: false,
-      publicationsUrlBold: false,
-      publicationsUrlItalic: false,
-      publicationsDateBold: false,
-      publicationsDateItalic: false,
-      // Awards
-      awardsListStyle: 'bullet',
-      awardsTitleBold: true,
-      awardsTitleItalic: false,
-      awardsAwarderBold: false,
-      awardsAwarderItalic: false,
-      awardsDateBold: false,
-      awardsDateItalic: false,
-      // References
-      referencesListStyle: 'bullet',
-      referencesNameBold: true,
-      referencesNameItalic: false,
-      referencesPositionBold: false,
-      referencesPositionItalic: false,
-      // Custom
-      customSectionListStyle: 'bullet',
-      customSectionNameBold: true,
-      customSectionNameItalic: false,
-      customSectionDescriptionBold: false,
-      customSectionDescriptionItalic: false,
-      customSectionDateBold: false,
-      customSectionDateItalic: false,
-      customSectionUrlBold: false,
-      customSectionUrlItalic: false,
-      // Projects
-      projectsListStyle: 'bullet',
-      projectsNameBold: true,
-      projectsNameItalic: false,
-      projectsDateBold: false,
-      projectsDateItalic: false,
-      projectsTechnologiesBold: false,
-      projectsTechnologiesItalic: false,
-      projectsAchievementsListStyle: 'bullet',
-      projectsFeaturesBold: false,
-      projectsFeaturesItalic: false,
-      // Certificates (Extended)
-      certificatesListStyle: 'bullet',
-      certificatesNameBold: true,
-      certificatesNameItalic: false,
-      certificatesIssuerBold: false,
-      certificatesIssuerItalic: false,
-      certificatesDateBold: false,
-      certificatesDateItalic: false,
-      certificatesUrlBold: false,
-      certificatesUrlItalic: false,
+const createEmptyResume = (title: string = 'Untitled Resume', templateId: string = 'ats'): Resume => {
+  // Get template-specific defaults
+  const templateDefaults = getTemplateDefaults(templateId);
+  const themeColor = getTemplateThemeColor(templateId);
+
+  return {
+    id: uuidv4(),
+    meta: {
+      title,
+      templateId,
+      themeColor,
+      lastModified: new Date().toISOString(),
+      layoutSettings: templateDefaults as LayoutSettings,
     },
-  },
-  basics: {
-    name: '',
-    label: '',
-    email: '',
-    phone: '',
-    url: '',
-    summary: '',
-    location: { city: '', country: '' },
-    profiles: [],
-  },
-  work: [],
-  education: [],
-  skills: [],
-  projects: [],
-  certificates: [],
-  languages: [],
-  interests: [],
-  publications: [],
-  awards: [],
-  references: [],
-  custom: [],
-});
+    basics: {
+      name: '',
+      label: '',
+      email: '',
+      phone: '',
+      url: '',
+      summary: '',
+      location: { city: '', country: '' },
+      profiles: [],
+    },
+    education: [],
+    skills: [],
+    work: [],
+    projects: [],
+    certificates: [],
+    publications: [],
+    awards: [],
+    languages: [],
+    interests: [],
+    references: [],
+    custom: [],
+  };
+};
 
 export const useResumeStore = create<ResumeState>()(
   persist(
@@ -324,12 +160,18 @@ export const useResumeStore = create<ResumeState>()(
       resetResume: () => {
         const { currentResume } = get();
         if (currentResume) {
-          const empty = createEmptyResume(currentResume.meta.title, currentResume.meta.templateId);
+          const templateDefaults = getTemplateDefaults(currentResume.meta.templateId);
+          const themeColor = getTemplateThemeColor(currentResume.meta.templateId);
+          
           set({
             currentResume: {
-              ...empty,
-              id: currentResume.id, // Keep same ID
-              meta: currentResume.meta, // Keep same meta (title, theme, template)
+              ...currentResume,
+              meta: {
+                ...currentResume.meta,
+                themeColor,
+                layoutSettings: templateDefaults as LayoutSettings,
+                lastModified: new Date().toISOString(),
+              },
             }
           });
         }

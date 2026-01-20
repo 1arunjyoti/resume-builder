@@ -7,9 +7,11 @@ import {
   Font,
   pdf,
   Link,
+  Image,
 } from "@react-pdf/renderer";
 import type { Resume, LayoutSettings } from "@/db";
 import { PDFRichText } from "./PDFRichText";
+import { getTemplateDefaults } from "@/lib/template-defaults";
 
 // Register fonts
 Font.register({
@@ -45,90 +47,105 @@ const createStyles = (
     lineHeight: number;
     sectionMargin: number;
     bulletMargin: number;
+    headerBottomMargin?: number;
   },
 ) =>
   StyleSheet.create({
     page: {
-      padding: 0,
+      padding: 30,
+      paddingTop: 40,
       fontFamily: "Open Sans",
       fontSize: settings.fontSize,
       lineHeight: settings.lineHeight,
-      color: "#333",
+      color: "#374151", // Slate 700
+      backgroundColor: "#fff",
       paddingBottom: 30,
     },
     header: {
-      backgroundColor: themeColor,
-      padding: 30,
-      paddingBottom: 20,
-      color: "#ffffff",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      marginBottom: settings.headerBottomMargin || 24,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColor,
+      paddingBottom: 16,
     },
-    headerContent: {
-      maxWidth: "90%",
-      marginHorizontal: "auto",
+    headerLeft: {
+      flex: 1,
+      marginRight: 20,
+    },
+    headerRight: {
+      alignItems: "flex-end",
+      justifyContent: "center",
+      maxWidth: "40%",
     },
     name: {
-      fontSize: 28,
+      fontSize: 32,
       fontWeight: "bold",
-      marginBottom: 24,
-      letterSpacing: 0.5,
-      color: "#ffffff",
+      color: themeColor,
+      marginBottom: 6,
+      letterSpacing: -0.5,
+      lineHeight: 1.1,
     },
     title: {
-      fontSize: settings.fontSize + 4,
-      marginBottom: 15,
-      opacity: 0.9,
+      fontSize: settings.fontSize + 2,
+      color: "#6b7280", // Slate 500
       textTransform: "uppercase",
-      letterSpacing: 1.5,
-      color: "#ffffff",
-    },
-    contactRow: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 20,
-      fontSize: settings.fontSize,
-      opacity: 0.9,
-      marginTop: 10,
+      letterSpacing: 2,
+      marginBottom: 4,
     },
     contactItem: {
-      color: "#ffffff",
+      fontSize: settings.fontSize - 0.5,
+      color: "#4b5563", // Slate 600
+      marginBottom: 3,
+      textAlign: "right",
     },
-    body: {
-      padding: 30,
-      paddingTop: 20,
-    },
+    // Sections
     section: {
       marginBottom: settings.sectionMargin,
     },
     sectionTitleWrapper: {
       flexDirection: "row",
-      marginBottom: 12,
+      marginBottom: 10,
       justifyContent:
         settings.sectionHeadingAlign === "center"
           ? "center"
           : settings.sectionHeadingAlign === "right"
             ? "flex-end"
             : "flex-start",
+      // Minimalist default: just a bottom border
+      borderBottomWidth: 1,
+      borderBottomColor: "#e5e7eb", // Slate 200
+      paddingBottom: 4,
+      // Overrides for user settings
       ...(settings.sectionHeadingStyle === 1 && {
-        borderBottomWidth: 1.5,
-        borderBottomColor: "#f0f0f0", // or themeColor? Original was #f0f0f0
+        borderBottomWidth: 2,
+        borderBottomColor: themeColor,
         paddingBottom: 6,
       }),
+      ...(settings.sectionHeadingStyle === 2 && {
+        borderBottomWidth: 0,
+        paddingBottom: 0,
+      }),
       ...(settings.sectionHeadingStyle === 3 && {
-        borderBottomWidth: 2.5,
-        borderBottomColor: "#f0f0f0",
+        borderBottomWidth: 1,
+        borderBottomColor: "#000000",
         paddingBottom: 6,
       }),
       ...(settings.sectionHeadingStyle === 4 && {
-        backgroundColor: "#f3f4f6", // Light gray
+        // Background
+        backgroundColor: "#f3f4f6",
         paddingVertical: 2,
-        paddingHorizontal: 8,
-        borderRadius: 4,
+        paddingHorizontal: 6,
         borderBottomWidth: 0,
+        borderRadius: 2,
       }),
       ...(settings.sectionHeadingStyle === 5 && {
-        borderLeftWidth: 4,
+        // Border Left
+        borderLeftWidth: 3,
         borderLeftColor: themeColor,
         paddingLeft: 8,
+        borderBottomWidth: 0,
       }),
       ...(settings.sectionHeadingStyle === 6 && {
         borderTopWidth: 1,
@@ -139,116 +156,129 @@ const createStyles = (
       }),
       ...(settings.sectionHeadingStyle === 7 && {
         borderBottomWidth: 1.5,
-        borderBottomColor: "#f0f0f0",
+        borderBottomColor: "#e5e7eb",
         borderStyle: "dashed",
         paddingBottom: 6,
       }),
       ...(settings.sectionHeadingStyle === 8 && {
         borderBottomWidth: 1.5,
-        borderBottomColor: "#f0f0f0",
+        borderBottomColor: "#e5e7eb",
         borderStyle: "dotted",
         paddingBottom: 6,
       }),
     },
     sectionTitle: {
       fontSize:
-        settings.sectionHeadingSize === "L"
-          ? settings.fontSize + 4
-          : settings.fontSize + 2,
-      fontWeight: settings.sectionHeadingBold ? "bold" : "normal",
+        settings.sectionHeadingSize === "XL"
+          ? settings.fontSize + 6
+          : settings.sectionHeadingSize === "L"
+            ? settings.fontSize + 4
+            : settings.sectionHeadingSize === "M"
+              ? settings.fontSize + 2
+              : settings.fontSize + 1,
+      fontWeight: settings.sectionHeadingBold ? "bold" : "semibold",
       color: themeColor,
       textTransform: settings.sectionHeadingCapitalization || "uppercase",
-      letterSpacing: 1.2,
-      // Removed intrinsic border/margin/padding
+      letterSpacing: 1.5,
     },
-    // Summary
-    summary: {
-      fontSize: settings.fontSize + 1,
-      lineHeight: settings.lineHeight,
-      marginBottom: 10,
-      color: "#444",
-    },
-    // Work
+    // Content
     entryContainer: {
       marginBottom: 10,
     },
     entryHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
-      alignItems: "baseline",
-      marginBottom: 4,
+      alignItems: "flex-start",
+      marginBottom: 2,
     },
     entryTitle: {
-      fontSize: settings.fontSize + 2,
+      fontSize: settings.fontSize + 1.5,
       fontWeight: "bold",
-      color: "#222",
-    },
-    entryCompanyName: {
-      fontSize: settings.fontSize + 1,
-      fontWeight: "semibold",
-      color: "#555",
+      color: "#111827", // Slate 900
+      flex: 1,
     },
     entryDate: {
       fontSize: settings.fontSize,
-      color: "#888",
+      color: "#6b7280", // Slate 500
+      textAlign: "right",
+      marginLeft: 10,
+    },
+    entryCompany: {
+      fontSize: settings.fontSize + 0.5,
+      fontWeight: "semibold",
+      color: "#4b5563", // Slate 600
+      marginBottom: 2,
+    },
+    summary: {
+      fontSize: settings.fontSize,
+      lineHeight: settings.lineHeight,
+      marginBottom: 4,
+      color: "#374151",
     },
     bulletList: {
-      marginTop: 6,
-      paddingLeft: 4,
+      marginTop: 2,
+      paddingLeft: 0,
     },
     bulletItem: {
       flexDirection: "row",
       marginBottom: settings.bulletMargin,
+      paddingLeft: 8,
     },
     bullet: {
-      width: 12,
-      fontSize: 12,
-      lineHeight: 1,
+      width: 10,
+      fontSize: 10,
       color: themeColor,
+      marginRight: 4,
     },
     bulletText: {
       flex: 1,
-      fontSize: settings.fontSize + 0.5,
-      color: "#444",
+      fontSize: settings.fontSize,
       lineHeight: settings.lineHeight,
+      color: "#374151",
     },
     // Skills
     skillsList: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 12,
+      gap: 8,
     },
     skillItem: {
-      backgroundColor: "#f8f9fa",
-      paddingVertical: 4,
-      paddingHorizontal: 10,
-      borderRadius: 2,
+      backgroundColor: "#f3f4f6",
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 4,
     },
-    skillName: {
+    skillText: {
       fontSize: settings.fontSize,
-      fontWeight: "bold",
-      color: "#333",
-    },
-    // Grid
-    row: {
-      flexDirection: "row",
-      gap: 30,
-    },
-    col: {
-      flex: 1,
+      color: "#374151",
+      fontWeight: "semibold",
     },
   });
 
 export function ElegantTemplate({ resume }: ElegantTemplateProps) {
-  const { basics, work, education, skills, projects } = resume;
-  const themeColor = resume.meta.themeColor || "#2c3e50"; // Default to dark blue/slate
+  const {
+    basics,
+    work,
+    education,
+    skills,
+    projects,
+    certificates,
+    languages,
+    interests,
+    publications,
+    awards,
+    references,
+    custom,
+  } = resume;
+  const themeColor = resume.meta.themeColor || "#2c3e50";
 
-  const settings = resume.meta.layoutSettings || {
-    fontSize: 8.5,
-    lineHeight: 1.2,
-    sectionMargin: 8,
-    bulletMargin: 2,
-    useBullets: true,
+  // Merge template defaults with resume settings
+  const templateDefaults = getTemplateDefaults(resume.meta.templateId || 'elegant');
+  const settings = { ...templateDefaults, ...resume.meta.layoutSettings } as LayoutSettings & {
+    fontSize: number;
+    lineHeight: number;
+    sectionMargin: number;
+    bulletMargin: number;
   };
 
   const styles = createStyles(themeColor, settings);
@@ -262,41 +292,57 @@ export function ElegantTemplate({ resume }: ElegantTemplateProps) {
     });
   };
 
+  const renderProfileImage = () => {
+    if (!basics.image || !settings.showProfileImage) return null;
+    const sizeMap = { S: 50, M: 80, L: 120 };
+    const size = sizeMap[settings.profileImageSize || "M"];
+    return (
+      // eslint-disable-next-line jsx-a11y/alt-text
+      <Image
+        src={basics.image}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: settings.profileImageShape === "square" ? 0 : size / 2,
+          marginBottom: 12,
+          objectFit: "cover",
+          borderColor: themeColor,
+          borderWidth: settings.profileImageBorder ? 1 : 0,
+        }}
+      />
+    );
+  };
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Banner Header */}
         <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <Text style={styles.name}>{basics.name || "Your Name"}</Text>
-            {basics.label && <Text style={styles.title}>{basics.label}</Text>}
-
-            <View style={styles.contactRow}>
-              {basics.email && (
-                <Text style={styles.contactItem}>{basics.email}</Text>
-              )}
-              {basics.phone && (
-                <Text style={styles.contactItem}>• {basics.phone}</Text>
-              )}
-              {basics.location.city && (
-                <Text style={styles.contactItem}>
-                  • {basics.location.city}
-                  {basics.location.country
-                    ? `, ${basics.location.country}`
-                    : ""}
-                </Text>
-              )}
-              {basics.url && (
-                <Link src={basics.url} style={styles.contactItem}>
-                  • Portfolio
-                </Link>
-              )}
-            </View>
+          <View style={styles.headerLeft}>
+            {renderProfileImage()}
+            <Text style={styles.name}>{basics.name}</Text>
+            <Text style={styles.title}>{basics.label}</Text>
+          </View>
+          <View style={styles.headerRight}>
+            {basics.email && (
+              <Text style={styles.contactItem}>{basics.email}</Text>
+            )}
+            {basics.phone && (
+              <Text style={styles.contactItem}>{basics.phone}</Text>
+            )}
+            {basics.location?.city && (
+              <Text style={styles.contactItem}>
+                {basics.location.city}, {basics.location.country}
+              </Text>
+            )}
+            {basics.url && (
+              <Link src={basics.url} style={styles.contactItem}>
+                Portfolio
+              </Link>
+            )}
           </View>
         </View>
 
-        <View style={styles.body}>
-          {/* Summary */}
+        <View>
           {basics.summary && (
             <View style={styles.section}>
               {((settings.summaryHeadingVisible ?? true) as boolean) && (
@@ -307,7 +353,7 @@ export function ElegantTemplate({ resume }: ElegantTemplateProps) {
               <PDFRichText
                 text={basics.summary}
                 style={styles.summary}
-                fontSize={settings.fontSize + 1}
+                fontSize={settings.fontSize}
                 fontFamily="Open Sans"
                 boldFontFamily="Open Sans"
                 italicFontFamily="Open Sans"
@@ -315,8 +361,6 @@ export function ElegantTemplate({ resume }: ElegantTemplateProps) {
             </View>
           )}
 
-          {/* Work & Projects split if needed, but linear is often cleaner for "Elegant" */}
-          {/* Work Experience */}
           {work.length > 0 && (
             <View style={styles.section}>
               {((settings.workHeadingVisible ?? true) as boolean) && (
@@ -327,41 +371,24 @@ export function ElegantTemplate({ resume }: ElegantTemplateProps) {
               {work.map((exp) => (
                 <View key={exp.id} style={styles.entryContainer}>
                   <View style={styles.entryHeader}>
-                    <View>
-                      <Text style={styles.entryTitle}>{exp.position}</Text>
-                      <Text style={styles.entryCompanyName}>{exp.company}</Text>
-                    </View>
-                    <View style={{ alignItems: "flex-end" }}>
-                      <Text style={styles.entryDate}>
-                        {formatDate(exp.startDate)} - {formatDate(exp.endDate)}
-                      </Text>
-                    </View>
+                    <Text style={styles.entryTitle}>{exp.position}</Text>
+                    <Text style={styles.entryDate}>
+                      {formatDate(exp.startDate)} — {formatDate(exp.endDate)}
+                    </Text>
                   </View>
+                  <Text style={styles.entryCompany}>{exp.company}</Text>
 
                   {exp.summary && (
-                    <PDFRichText
-                      text={exp.summary}
-                      style={{
-                        ...styles.summary,
-                        marginTop: 4,
-                        fontStyle: "italic",
-                        fontSize: 9,
-                      }}
-                      fontSize={9}
-                      fontFamily="Open Sans"
-                      boldFontFamily="Open Sans"
-                      italicFontFamily="Open Sans"
-                    />
+                    <Text style={styles.summary}>{exp.summary}</Text>
                   )}
-
                   {exp.highlights.length > 0 && (
                     <View style={styles.bulletList}>
-                      {exp.highlights.map((highlight, i) => (
+                      {exp.highlights.map((h, i) => (
                         <View key={i} style={styles.bulletItem}>
                           {settings.useBullets && (
                             <Text style={styles.bullet}>•</Text>
                           )}
-                          <Text style={styles.bulletText}>{highlight}</Text>
+                          <Text style={styles.bulletText}>{h}</Text>
                         </View>
                       ))}
                     </View>
@@ -371,7 +398,6 @@ export function ElegantTemplate({ resume }: ElegantTemplateProps) {
             </View>
           )}
 
-          {/* Education and Skills in a row? No, keep it clean stacked for readability */}
           {education.length > 0 && (
             <View style={styles.section}>
               {((settings.educationHeadingVisible ?? true) as boolean) && (
@@ -382,51 +408,22 @@ export function ElegantTemplate({ resume }: ElegantTemplateProps) {
               {education.map((edu) => (
                 <View key={edu.id} style={styles.entryContainer}>
                   <View style={styles.entryHeader}>
-                    <View>
-                      <Text style={styles.entryTitle}>{edu.institution}</Text>
-                      <Text style={styles.entryCompanyName}>
-                        {edu.studyType} {edu.area && `in ${edu.area}`}
-                      </Text>
-                    </View>
+                    <Text style={styles.entryTitle}>{edu.institution}</Text>
                     <Text style={styles.entryDate}>
-                      {formatDate(edu.startDate)} - {formatDate(edu.endDate)}
+                      {formatDate(edu.startDate)} — {formatDate(edu.endDate)}
                     </Text>
                   </View>
-                  {edu.url && (
-                    <Link
-                      src={edu.url}
-                      style={{
-                        fontSize: 9,
-                        color: themeColor,
-                        marginBottom: 2,
-                      }}
-                    >
-                      View Link
-                    </Link>
-                  )}
+                  <Text style={styles.entryCompany}>
+                    {edu.studyType} {edu.area}
+                  </Text>
                   {edu.score && (
-                    <Text style={[styles.summary, { fontSize: 9 }]}>
-                      {edu.score.includes(":")
-                        ? edu.score
-                        : `Grade: ${edu.score}`}
-                    </Text>
-                  )}
-                  {edu.summary && (
-                    <PDFRichText
-                      text={edu.summary}
-                      style={{ ...styles.summary, fontSize: 9, marginTop: 2 }}
-                      fontSize={9}
-                      fontFamily="Open Sans"
-                      boldFontFamily="Open Sans"
-                      italicFontFamily="Open Sans"
-                    />
+                    <Text style={styles.summary}>Grade: {edu.score}</Text>
                   )}
                 </View>
               ))}
             </View>
           )}
 
-          {/* Skills */}
           {skills.length > 0 && (
             <View style={styles.section}>
               {((settings.skillsHeadingVisible ?? true) as boolean) && (
@@ -437,23 +434,18 @@ export function ElegantTemplate({ resume }: ElegantTemplateProps) {
               <View style={styles.skillsList}>
                 {skills.map((skill) => (
                   <View key={skill.id} style={styles.skillItem}>
-                    <Text style={styles.skillName}>
-                      {skill.name}{" "}
-                      {skill.keywords.length > 0 &&
-                        `• ${skill.keywords.slice(0, 3).join(", ")}`}
-                    </Text>
+                    <Text style={styles.skillText}>{skill.name}</Text>
                   </View>
                 ))}
               </View>
             </View>
           )}
 
-          {/* Projects */}
           {projects.length > 0 && (
             <View style={styles.section}>
               {((settings.projectsHeadingVisible ?? true) as boolean) && (
                 <View style={styles.sectionTitleWrapper}>
-                  <Text style={styles.sectionTitle}>Key Projects</Text>
+                  <Text style={styles.sectionTitle}>Projects</Text>
                 </View>
               )}
               {projects.map((proj) => (
@@ -463,9 +455,12 @@ export function ElegantTemplate({ resume }: ElegantTemplateProps) {
                     {proj.url && (
                       <Link
                         src={proj.url}
-                        style={{ fontSize: 9, color: themeColor }}
+                        style={{
+                          fontSize: settings.fontSize,
+                          color: themeColor,
+                        }}
                       >
-                        View Link
+                        Link
                       </Link>
                     )}
                   </View>
@@ -473,7 +468,172 @@ export function ElegantTemplate({ resume }: ElegantTemplateProps) {
                     <PDFRichText
                       text={proj.description}
                       style={styles.summary}
-                      fontSize={settings.fontSize + 1}
+                      fontSize={settings.fontSize}
+                      fontFamily="Open Sans"
+                      boldFontFamily="Open Sans"
+                      italicFontFamily="Open Sans"
+                    />
+                  )}
+                  {proj.highlights && proj.highlights.length > 0 && (
+                    <View style={styles.bulletList}>
+                      {proj.highlights.map((h, i) => (
+                        <View key={i} style={styles.bulletItem}>
+                          {settings.useBullets && (
+                            <Text style={styles.bullet}>•</Text>
+                          )}
+                          <Text style={styles.bulletText}>{h}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+
+          {certificates && certificates.length > 0 && (
+            <View style={styles.section}>
+              {((settings.certificatesHeadingVisible ?? true) as boolean) && (
+                <View style={styles.sectionTitleWrapper}>
+                  <Text style={styles.sectionTitle}>Certificates</Text>
+                </View>
+              )}
+              {certificates.map((cert) => (
+                <View key={cert.id} style={styles.entryContainer}>
+                  <View style={styles.entryHeader}>
+                    <Text style={styles.entryTitle}>{cert.name}</Text>
+                    <Text style={styles.entryDate}>{formatDate(cert.date)}</Text>
+                  </View>
+                  <Text style={styles.entryCompany}>{cert.issuer}</Text>
+                  {cert.summary && (
+                    <PDFRichText
+                      text={cert.summary}
+                      style={styles.summary}
+                      fontSize={settings.fontSize}
+                      fontFamily="Open Sans"
+                      boldFontFamily="Open Sans"
+                      italicFontFamily="Open Sans"
+                    />
+                  )}
+                  {cert.url && (
+                    <Link
+                      src={cert.url}
+                      style={{
+                        fontSize: settings.fontSize - 0.5,
+                        color: themeColor,
+                        marginTop: 2,
+                      }}
+                    >
+                      View Certificate
+                    </Link>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+
+          {languages && languages.length > 0 && (
+            <View style={styles.section}>
+              {((settings.languagesHeadingVisible ?? true) as boolean) && (
+                <View style={styles.sectionTitleWrapper}>
+                  <Text style={styles.sectionTitle}>Languages</Text>
+                </View>
+              )}
+              <View style={styles.skillsList}>
+                {languages.map((lang) => (
+                  <View key={lang.id} style={styles.skillItem}>
+                    <Text style={styles.skillText}>
+                      {lang.language} — {lang.fluency}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {interests && interests.length > 0 && (
+            <View style={styles.section}>
+              {((settings.interestsHeadingVisible ?? true) as boolean) && (
+                <View style={styles.sectionTitleWrapper}>
+                  <Text style={styles.sectionTitle}>Interests</Text>
+                </View>
+              )}
+              <View style={styles.skillsList}>
+                {interests.map((interest) => (
+                  <View key={interest.id} style={styles.skillItem}>
+                    <Text style={styles.skillText}>
+                      {interest.name}
+                      {interest.keywords.length > 0 &&
+                        ` (${interest.keywords.join(", ")})`}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {publications && publications.length > 0 && (
+            <View style={styles.section}>
+              {((settings.publicationsHeadingVisible ?? true) as boolean) && (
+                <View style={styles.sectionTitleWrapper}>
+                  <Text style={styles.sectionTitle}>Publications</Text>
+                </View>
+              )}
+              {publications.map((pub) => (
+                <View key={pub.id} style={styles.entryContainer}>
+                  <View style={styles.entryHeader}>
+                    <Text style={styles.entryTitle}>{pub.name}</Text>
+                    <Text style={styles.entryDate}>
+                      {formatDate(pub.releaseDate)}
+                    </Text>
+                  </View>
+                  <Text style={styles.entryCompany}>{pub.publisher}</Text>
+                  {pub.summary && (
+                    <PDFRichText
+                      text={pub.summary}
+                      style={styles.summary}
+                      fontSize={settings.fontSize}
+                      fontFamily="Open Sans"
+                      boldFontFamily="Open Sans"
+                      italicFontFamily="Open Sans"
+                    />
+                  )}
+                  {pub.url && (
+                    <Link
+                      src={pub.url}
+                      style={{
+                        fontSize: settings.fontSize - 0.5,
+                        color: themeColor,
+                        marginTop: 2,
+                      }}
+                    >
+                      View Publication
+                    </Link>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+
+          {awards && awards.length > 0 && (
+            <View style={styles.section}>
+              {((settings.awardsHeadingVisible ?? true) as boolean) && (
+                <View style={styles.sectionTitleWrapper}>
+                  <Text style={styles.sectionTitle}>Awards</Text>
+                </View>
+              )}
+              {awards.map((award) => (
+                <View key={award.id} style={styles.entryContainer}>
+                  <View style={styles.entryHeader}>
+                    <Text style={styles.entryTitle}>{award.title}</Text>
+                    <Text style={styles.entryDate}>{formatDate(award.date)}</Text>
+                  </View>
+                  <Text style={styles.entryCompany}>{award.awarder}</Text>
+                  {award.summary && (
+                    <PDFRichText
+                      text={award.summary}
+                      style={styles.summary}
+                      fontSize={settings.fontSize}
                       fontFamily="Open Sans"
                       boldFontFamily="Open Sans"
                       italicFontFamily="Open Sans"
@@ -483,13 +643,89 @@ export function ElegantTemplate({ resume }: ElegantTemplateProps) {
               ))}
             </View>
           )}
+
+          {references && references.length > 0 && (
+            <View style={styles.section}>
+              {((settings.referencesHeadingVisible ?? true) as boolean) && (
+                <View style={styles.sectionTitleWrapper}>
+                  <Text style={styles.sectionTitle}>References</Text>
+                </View>
+              )}
+              {references.map((ref) => (
+                <View key={ref.id} style={styles.entryContainer}>
+                  <Text style={styles.entryTitle}>{ref.name}</Text>
+                  <Text style={styles.entryCompany}>{ref.position}</Text>
+                  {ref.reference && (
+                    <PDFRichText
+                      text={ref.reference}
+                      style={styles.summary}
+                      fontSize={settings.fontSize}
+                      fontFamily="Open Sans"
+                      boldFontFamily="Open Sans"
+                      italicFontFamily="Open Sans"
+                    />
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+
+          {custom && custom.length > 0 && (
+            <>
+              {custom.map((section) => (
+                <View key={section.id} style={styles.section}>
+                  {((settings.customHeadingVisible ?? true) as boolean) && (
+                    <View style={styles.sectionTitleWrapper}>
+                      <Text style={styles.sectionTitle}>{section.name}</Text>
+                    </View>
+                  )}
+                  {section.items.map((item) => (
+                    <View key={item.id} style={styles.entryContainer}>
+                      <View style={styles.entryHeader}>
+                        <Text style={styles.entryTitle}>{item.name}</Text>
+                        {item.date && (
+                          <Text style={styles.entryDate}>
+                            {formatDate(item.date)}
+                          </Text>
+                        )}
+                      </View>
+                      {item.description && (
+                        <Text style={styles.entryCompany}>{item.description}</Text>
+                      )}
+                      {item.summary && (
+                        <PDFRichText
+                          text={item.summary}
+                          style={styles.summary}
+                          fontSize={settings.fontSize}
+                          fontFamily="Open Sans"
+                          boldFontFamily="Open Sans"
+                          italicFontFamily="Open Sans"
+                        />
+                      )}
+                      {item.url && (
+                        <Link
+                          src={item.url}
+                          style={{
+                            fontSize: settings.fontSize - 0.5,
+                            color: themeColor,
+                            marginTop: 2,
+                          }}
+                        >
+                          View Link
+                        </Link>
+                      )}
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </>
+          )}
         </View>
       </Page>
     </Document>
   );
 }
 
-// Export PDF generation function
 export async function generateElegantPDF(resume: Resume): Promise<Blob> {
   const doc = <ElegantTemplate resume={resume} />;
   const blob = await pdf(doc).toBlob();

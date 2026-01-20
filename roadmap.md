@@ -18,3 +18,5 @@
    - Awards section ✅
    - References section ✅
    - Custom section ✅
+
+2. Profile Image does not apply to the templates

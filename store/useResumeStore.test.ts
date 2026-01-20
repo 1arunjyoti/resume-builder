@@ -56,7 +56,7 @@ describe('Resume Store', () => {
           marginVertical: 15,
           headerBottomMargin: 20,
           sectionOrder: [],
-          sectionHeadingStyle: 4,
+          sectionHeadingStyle: 3,
           sectionHeadingAlign: 'left',
           sectionHeadingBold: false,
           sectionHeadingCapitalization: 'uppercase',

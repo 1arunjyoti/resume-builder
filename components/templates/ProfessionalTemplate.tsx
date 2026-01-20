@@ -5,9 +5,11 @@ import {
   View,
   StyleSheet,
   pdf,
+  Image,
 } from "@react-pdf/renderer";
 import type { Resume, LayoutSettings } from "@/db";
 import { PDFRichText } from "./PDFRichText";
+import { getTemplateDefaults } from "@/lib/template-defaults";
 
 // Using standard serif font (Times-Roman) which doesn't need external registration
 // or we can register a specific one if needed. Reference: https://react-pdf.org/fonts
@@ -72,8 +74,8 @@ const createStyles = (
         paddingBottom: 2,
       }),
       ...(settings.sectionHeadingStyle === 3 && {
-        borderBottomWidth: 2,
-        borderBottomColor: "#ccc",
+        borderBottomWidth: 1,
+        borderBottomColor: "#000000",
         paddingBottom: 2,
       }),
       ...(settings.sectionHeadingStyle === 4 && {
@@ -167,12 +169,13 @@ interface ProfessionalTemplateProps {
 export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
   const { basics, work, education, skills, projects } = resume;
 
-  const settings = resume.meta.layoutSettings || {
-    fontSize: 8.5,
-    lineHeight: 1.2,
-    sectionMargin: 8,
-    bulletMargin: 2,
-    useBullets: true,
+  // Merge template defaults with resume settings
+  const templateDefaults = getTemplateDefaults(resume.meta.templateId || 'professional');
+  const settings = { ...templateDefaults, ...resume.meta.layoutSettings } as LayoutSettings & {
+    fontSize: number;
+    lineHeight: number;
+    sectionMargin: number;
+    bulletMargin: number;
   };
 
   const styles = createStyles("#000", settings);
@@ -186,11 +189,36 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
     });
   };
 
+  const renderProfileImage = () => {
+    if (!basics.image || !settings.showProfileImage) return null;
+
+    const sizeMap = { S: 50, M: 80, L: 120 };
+    const size = sizeMap[settings.profileImageSize || "M"];
+
+    return (
+      // eslint-disable-next-line jsx-a11y/alt-text
+      <Image
+        src={basics.image}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: settings.profileImageShape === "square" ? 0 : size / 2,
+          borderWidth: settings.profileImageBorder ? 1 : 0,
+          borderColor: "#000",
+          objectFit: "cover",
+          marginBottom: 10,
+          alignSelf: "center",
+        }}
+      />
+    );
+  };
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
+          {renderProfileImage()}
           <Text style={styles.name}>{basics.name || "Your Name"}</Text>
           {basics.label && <Text style={styles.title}>{basics.label}</Text>}
           <View style={styles.contactRow}>

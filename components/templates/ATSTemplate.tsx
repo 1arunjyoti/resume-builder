@@ -7,9 +7,11 @@ import {
   Font,
   pdf,
   Link,
+  Image,
 } from "@react-pdf/renderer";
 import type { Resume, LayoutSettings } from "@/db";
 import { PDFRichText } from "./PDFRichText";
+import { getTemplateDefaults } from "@/lib/template-defaults";
 
 // Register fonts (using default fonts for now)
 Font.register({
@@ -251,31 +253,13 @@ interface ATSTemplateProps {
 export function ATSTemplate({ resume }: ATSTemplateProps) {
   const { basics, work, education, skills, projects } = resume;
 
-  // Default settings if not present
-  const settings = resume.meta.layoutSettings || {
-    fontSize: 8.5,
-    lineHeight: 1.2,
-    sectionMargin: 8,
-    bulletMargin: 2,
-    useBullets: true,
-    columnCount: 1,
-    headerPosition: "top",
-    leftColumnWidth: 30,
-    sectionOrder: [
-      "work",
-      "education",
-      "skills",
-      "projects",
-      "certificates",
-      "languages",
-      "interests",
-      "publications",
-      "awards",
-      "references",
-      "custom",
-    ],
-    marginHorizontal: 15,
-    marginVertical: 15,
+  // Merge template defaults with resume settings
+  const templateDefaults = getTemplateDefaults(resume.meta.templateId || 'ats');
+  const settings = { ...templateDefaults, ...resume.meta.layoutSettings } as LayoutSettings & {
+    fontSize: number;
+    lineHeight: number;
+    sectionMargin: number;
+    bulletMargin: number;
   };
 
   const themeColor = resume.meta.themeColor || "#3b82f6";
@@ -288,6 +272,31 @@ export function ATSTemplate({ resume }: ATSTemplateProps) {
       month: "short",
       year: "numeric",
     });
+  };
+
+  const renderProfileImage = () => {
+    if (!basics.image || !settings.showProfileImage) return null;
+
+    const sizeMap = { S: 50, M: 80, L: 120 };
+    const size = sizeMap[settings.profileImageSize || "M"];
+
+    // For ATS, simple square or circle, usually no fancy borders
+    return (
+      // eslint-disable-next-line jsx-a11y/alt-text
+      <Image
+        src={basics.image}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: settings.profileImageShape === "square" ? 0 : size / 2,
+          borderWidth: settings.profileImageBorder ? 1 : 0,
+          borderColor: "#000",
+          objectFit: "cover",
+          marginBottom: 10,
+          alignSelf: "flex-start", // Left align for ATS usually better? Or match header alignment?
+        }}
+      />
+    );
   };
 
   const renderSection = (id: string) => {
@@ -663,6 +672,7 @@ export function ATSTemplate({ resume }: ATSTemplateProps) {
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
+          {renderProfileImage()}
           <Text style={styles.name}>{basics.name || "Your Name"}</Text>
           {basics.label && <Text style={styles.title}>{basics.label}</Text>}
           <View style={styles.contactRow}>

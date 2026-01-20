@@ -43,19 +43,35 @@ export function PageLayoutSettings({
     }),
   );
 
+  // Ensure sectionOrder includes all sections
+  const getSectionOrder = React.useCallback(() => {
+    const currentOrder = layoutSettings.sectionOrder || [];
+    const allSectionIds = SECTIONS.map((s) => s.id);
+    
+    // Include existing order items that are valid
+    const validOrder = currentOrder.filter((id) => 
+      allSectionIds.includes(id)
+    );
+    
+    // Add any missing sections at the end
+    const missingIds = allSectionIds.filter((id) => 
+      !validOrder.includes(id)
+    );
+    
+    return [...validOrder, ...missingIds];
+  }, [layoutSettings.sectionOrder]);
+
+  const sectionOrder = getSectionOrder();
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (active.id !== over?.id) {
-      const oldIndex = (
-        layoutSettings.sectionOrder || SECTIONS.map((s) => s.id)
-      ).indexOf(active.id as string);
-      const newIndex = (
-        layoutSettings.sectionOrder || SECTIONS.map((s) => s.id)
-      ).indexOf(over?.id as string);
+      const oldIndex = sectionOrder.indexOf(active.id as string);
+      const newIndex = sectionOrder.indexOf(over?.id as string);
 
       const newOrder = arrayMove(
-        layoutSettings.sectionOrder || SECTIONS.map((s) => s.id),
+        sectionOrder,
         oldIndex,
         newIndex,
       ) as string[];
@@ -164,25 +180,23 @@ export function PageLayoutSettings({
             onDragEnd={handleDragEnd}
           >
             <SortableContext
-              items={layoutSettings.sectionOrder || SECTIONS.map((s) => s.id)}
+              items={sectionOrder}
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-2">
-                {(layoutSettings.sectionOrder || SECTIONS.map((s) => s.id)).map(
+                {sectionOrder.map(
                   (sectionId: string, index: number) => {
                     const section = SECTIONS.find((s) => s.id === sectionId);
                     if (!section) return null;
-                    const orderList =
-                      layoutSettings.sectionOrder || SECTIONS.map((s) => s.id);
                     return (
                       <SortableItem
                         key={sectionId}
                         id={sectionId}
                         label={section.label}
                         isFirst={index === 0}
-                        isLast={index === orderList.length - 1}
+                        isLast={index === sectionOrder.length - 1}
                         onMoveUp={() => {
-                          const newOrder = [...orderList];
+                          const newOrder = [...sectionOrder];
                           [newOrder[index - 1], newOrder[index]] = [
                             newOrder[index],
                             newOrder[index - 1],
@@ -190,7 +204,7 @@ export function PageLayoutSettings({
                           updateSetting("sectionOrder", newOrder);
                         }}
                         onMoveDown={() => {
-                          const newOrder = [...orderList];
+                          const newOrder = [...sectionOrder];
                           [newOrder[index + 1], newOrder[index]] = [
                             newOrder[index],
                             newOrder[index + 1],

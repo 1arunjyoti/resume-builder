@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Upload, User } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Plus, Trash2, Upload, User, Crop } from "lucide-react";
 import type { ResumeBasics } from "@/db";
 import { useRef, useState, useEffect, useMemo } from "react";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import { ImageCropper } from "@/components/ui/ImageCropper";
 
 interface BasicsFormProps {
   data: ResumeBasics;
@@ -21,12 +23,20 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   // imagePreview is for URLs created from file uploads (user action)
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // Cropper dialog state
+  const [showCropper, setShowCropper] = useState(false);
+  const [cropperImageSrc, setCropperImageSrc] = useState<string | null>(null);
 
   // Create blob URL for data.image using useMemo (for persisted images)
   // This avoids calling setState in useEffect
   const dataImageUrl = useMemo(() => {
     if (data.image && !imagePreview) {
-      return URL.createObjectURL(data.image);
+      if (data.image instanceof Blob) {
+        return URL.createObjectURL(data.image);
+      }
+      if (typeof data.image === "string") {
+        return data.image;
+      }
     }
     return null;
   }, [data.image, imagePreview]);
@@ -78,20 +88,53 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Revoke previous URL to prevent memory leak
-      if (imagePreview) {
-        URL.revokeObjectURL(imagePreview);
-      }
+      // Create URL for the cropper
+      const url = URL.createObjectURL(file);
+      setCropperImageSrc(url);
+      setShowCropper(true);
+    }
+  };
 
-      // Create preview URL
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
+  const handleCropComplete = (blob: Blob) => {
+    // Revoke previous URLs
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    if (cropperImageSrc) {
+      URL.revokeObjectURL(cropperImageSrc);
+    }
 
-      // Convert to Blob and store
-      file.arrayBuffer().then((buffer) => {
-        const blob = new Blob([buffer], { type: file.type });
-        updateField("image", blob);
-      });
+    // Create preview URL from cropped blob
+    const previewUrl = URL.createObjectURL(blob);
+    setImagePreview(previewUrl);
+
+    // Save the cropped blob
+    updateField("image", blob);
+
+    // Close cropper
+    setShowCropper(false);
+    setCropperImageSrc(null);
+  };
+
+  const handleCropCancel = () => {
+    // Revoke cropper URL
+    if (cropperImageSrc) {
+      URL.revokeObjectURL(cropperImageSrc);
+    }
+    setCropperImageSrc(null);
+    setShowCropper(false);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleEditImage = () => {
+    // Open cropper with currently displayed image
+    if (displayImageUrl) {
+      setCropperImageSrc(displayImageUrl);
+      setShowCropper(true);
     }
   };
 
@@ -171,7 +214,7 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
       <CollapsibleSection title="Profile Photo" icon={User} defaultOpen={true}>
         <div className="flex items-center gap-4">
           <div className="relative h-24 w-24 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/25">
-            {displayImageUrl ? (
+            {typeof displayImageUrl === "string" && displayImageUrl ? (
               <Image
                 src={displayImageUrl}
                 alt="Profile"
@@ -201,16 +244,28 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
               Upload Photo
             </Button>
             {displayImageUrl && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="text-destructive hover:text-destructive ml-2"
-                onClick={handleRemoveImage}
-              >
-                <Trash2 className="h-4 w-4" />
-                Remove
-              </Button>
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="ml-2"
+                  onClick={handleEditImage}
+                >
+                  <Crop className="h-4 w-4" />
+                  Crop
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive hover:text-destructive ml-2"
+                  onClick={handleRemoveImage}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Remove
+                </Button>
+              </>
             )}
             <p className="text-xs text-muted-foreground mt-1">
               PNG, JPG up to 2MB
@@ -408,6 +463,25 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
           ))}
         </div>
       </CollapsibleSection>
+
+      {/* Image Cropper Dialog */}
+      <Dialog
+        open={showCropper}
+        onOpenChange={(open) => {
+          if (!open) handleCropCancel();
+        }}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogTitle className="sr-only">Crop Profile Photo</DialogTitle>
+          {cropperImageSrc && (
+            <ImageCropper
+              imageSrc={cropperImageSrc}
+              onCrop={handleCropComplete}
+              onCancel={handleCropCancel}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
