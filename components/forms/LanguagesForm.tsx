@@ -68,23 +68,27 @@ export function LanguagesForm({ data, onChange }: LanguagesFormProps) {
               className="p-4 flex items-end gap-4 border rounded-lg bg-background"
             >
               <div className="flex-1 space-y-2">
-                <Label>Language</Label>
+                <Label htmlFor={`language-${lang.id}`}>Language</Label>
                 <Input
+                  id={`language-${lang.id}`}
                   placeholder="e.g. English"
                   value={lang.language}
                   onChange={(e) =>
                     updateLanguage(lang.id, "language", e.target.value)
                   }
+                  autoComplete="language"
                 />
               </div>
               <div className="flex-1 space-y-2">
-                <Label>Fluency</Label>
+                <Label htmlFor={`fluency-${lang.id}`}>Fluency</Label>
                 <select
+                  id={`fluency-${lang.id}`}
                   className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   value={lang.fluency}
                   onChange={(e) =>
                     updateLanguage(lang.id, "fluency", e.target.value)
                   }
+                  autoComplete="off"
                 >
                   <option value="" disabled>
                     Select fluency

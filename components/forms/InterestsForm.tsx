@@ -128,16 +128,18 @@ export function InterestsForm({ data, onChange }: InterestsFormProps) {
         >
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Interest Name</Label>
+              <Label htmlFor={`name-${item.id}`}>Interest Name</Label>
               <Input
+                id={`name-${item.id}`}
                 placeholder="e.g. Photography, Hiking"
                 value={item.name}
                 onChange={(e) => updateInterest(item.id, e.target.value)}
+                autoComplete="off"
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Keywords</Label>
+              <Label htmlFor={`keywords-${item.id}`}>Keywords</Label>
               <div className="flex flex-wrap gap-2 min-h-8">
                 {item.keywords.map((keyword, kIndex) => (
                   <span
@@ -158,6 +160,7 @@ export function InterestsForm({ data, onChange }: InterestsFormProps) {
               </div>
               <div className="flex gap-2">
                 <Input
+                  id={`keywords-${item.id}`}
                   placeholder="Add keyword..."
                   value={newKeyword[item.id] || ""}
                   onChange={(e) =>
@@ -168,6 +171,7 @@ export function InterestsForm({ data, onChange }: InterestsFormProps) {
                   }
                   onKeyDown={(e) => handleKeywordKeyDown(e, item.id)}
                   className="flex-1"
+                  autoComplete="off"
                 />
                 <Button
                   type="button"

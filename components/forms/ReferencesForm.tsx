@@ -92,30 +92,37 @@ export function ReferencesForm({ data, onChange }: ReferencesFormProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Name</Label>
+                <Label htmlFor={`name-${item.id}`}>Name</Label>
                 <Input
+                  id={`name-${item.id}`}
                   placeholder="e.g. John Doe"
                   value={item.name}
                   onChange={(e) =>
                     updateReference(item.id, "name", e.target.value)
                   }
+                  autoComplete="off"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Position / Company</Label>
+                <Label htmlFor={`position-${item.id}`}>
+                  Position / Company
+                </Label>
                 <Input
+                  id={`position-${item.id}`}
                   placeholder="e.g. Manager at Google"
                   value={item.position}
                   onChange={(e) =>
                     updateReference(item.id, "position", e.target.value)
                   }
+                  autoComplete="organization-title"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Reference</Label>
+              <Label htmlFor={`reference-${item.id}`}>Reference</Label>
               <RichTextEditor
+                id={`reference-${item.id}`}
                 placeholder="The reference text..."
                 minHeight="min-h-[60px]"
                 value={item.reference}

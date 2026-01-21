@@ -150,65 +150,76 @@ export function WorkForm({ data, onChange }: WorkFormProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Company</Label>
+                <Label htmlFor={`company-${exp.id}`}>Company</Label>
                 <Input
+                  id={`company-${exp.id}`}
                   placeholder="Company Name"
                   value={exp.company}
                   onChange={(e) =>
                     updateExperience(exp.id, "company", e.target.value)
                   }
+                  autoComplete="organization"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Position</Label>
+                <Label htmlFor={`position-${exp.id}`}>Position</Label>
                 <Input
+                  id={`position-${exp.id}`}
                   placeholder="Job Title"
                   value={exp.position}
                   onChange={(e) =>
                     updateExperience(exp.id, "position", e.target.value)
                   }
+                  autoComplete="organization-title"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Company Website</Label>
+              <Label htmlFor={`url-${exp.id}`}>Company Website</Label>
               <Input
+                id={`url-${exp.id}`}
                 placeholder="https://company.com"
                 value={exp.url}
                 onChange={(e) =>
                   updateExperience(exp.id, "url", e.target.value)
                 }
+                autoComplete="url"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Start Date</Label>
+                <Label htmlFor={`startDate-${exp.id}`}>Start Date</Label>
                 <Input
+                  id={`startDate-${exp.id}`}
                   type="month"
                   value={exp.startDate}
                   onChange={(e) =>
                     updateExperience(exp.id, "startDate", e.target.value)
                   }
+                  autoComplete="off"
                 />
               </div>
               <div className="space-y-2">
-                <Label>End Date</Label>
+                <Label htmlFor={`endDate-${exp.id}`}>End Date</Label>
                 <Input
+                  id={`endDate-${exp.id}`}
                   type="month"
                   placeholder="Leave empty if current"
                   value={exp.endDate}
                   onChange={(e) =>
                     updateExperience(exp.id, "endDate", e.target.value)
                   }
+                  autoComplete="off"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label htmlFor={`summary-${exp.id}`}>Description</Label>
               <RichTextEditor
+                id={`summary-${exp.id}`}
                 placeholder="Brief description of your role and responsibilities..."
                 minHeight="min-h-[60px]"
                 value={exp.summary}
@@ -241,6 +252,7 @@ export function WorkForm({ data, onChange }: WorkFormProps) {
                       }
                       className="flex-1"
                       aria-label={`Achievement ${hIndex + 1}`}
+                      autoComplete="off"
                     />
                     <Button
                       type="button"

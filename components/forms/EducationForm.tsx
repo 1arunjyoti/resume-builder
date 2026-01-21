@@ -174,69 +174,81 @@ export function EducationForm({ data, onChange }: EducationFormProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Institution</Label>
+                <Label htmlFor={`institution-${edu.id}`}>Institution</Label>
                 <Input
+                  id={`institution-${edu.id}`}
                   placeholder="University of Technology"
                   value={edu.institution}
                   onChange={(e) =>
                     updateEducation(edu.id, "institution", e.target.value)
                   }
+                  autoComplete="organization"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Website</Label>
+                <Label htmlFor={`url-${edu.id}`}>Website</Label>
                 <Input
+                  id={`url-${edu.id}`}
                   placeholder="https://university.edu"
                   value={edu.url}
                   onChange={(e) =>
                     updateEducation(edu.id, "url", e.target.value)
                   }
+                  autoComplete="url"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Degree Type</Label>
+                <Label htmlFor={`studyType-${edu.id}`}>Degree Type</Label>
                 <Input
+                  id={`studyType-${edu.id}`}
                   placeholder="Bachelor's, Master's, PhD..."
                   value={edu.studyType}
                   onChange={(e) =>
                     updateEducation(edu.id, "studyType", e.target.value)
                   }
+                  autoComplete="off"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Field of Study</Label>
+                <Label htmlFor={`area-${edu.id}`}>Field of Study</Label>
                 <Input
+                  id={`area-${edu.id}`}
                   placeholder="Computer Science"
                   value={edu.area}
                   onChange={(e) =>
                     updateEducation(edu.id, "area", e.target.value)
                   }
+                  autoComplete="off"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Start Date</Label>
+                <Label htmlFor={`startDate-${edu.id}`}>Start Date</Label>
                 <Input
+                  id={`startDate-${edu.id}`}
                   type="month"
                   value={edu.startDate}
                   onChange={(e) =>
                     updateEducation(edu.id, "startDate", e.target.value)
                   }
+                  autoComplete="off"
                 />
               </div>
               <div className="space-y-2">
-                <Label>End Date</Label>
+                <Label htmlFor={`endDate-${edu.id}`}>End Date</Label>
                 <Input
+                  id={`endDate-${edu.id}`}
                   type="month"
                   value={edu.endDate}
                   onChange={(e) =>
                     updateEducation(edu.id, "endDate", e.target.value)
                   }
+                  autoComplete="off"
                 />
               </div>
               <div className="space-y-2">
@@ -274,13 +286,15 @@ export function EducationForm({ data, onChange }: EducationFormProps) {
                     );
                   }}
                   className="mt-0"
+                  autoComplete="off"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label htmlFor={`summary-${edu.id}`}>Description</Label>
               <RichTextEditor
+                id={`summary-${edu.id}`}
                 placeholder="Brief description of your studies, thesis, or key achievements..."
                 minHeight="min-h-[60px]"
                 value={edu.summary || ""}
@@ -313,6 +327,7 @@ export function EducationForm({ data, onChange }: EducationFormProps) {
                       }
                       className="flex-1"
                       aria-label={`Course ${cIndex + 1}`}
+                      autoComplete="off"
                     />
                     <Button
                       type="button"

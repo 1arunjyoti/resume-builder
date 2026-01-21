@@ -25,7 +25,7 @@ export function OfflineIndicator() {
   const isOnline = useSyncExternalStore(
     subscribe,
     getSnapshot,
-    getServerSnapshot
+    getServerSnapshot,
   );
 
   // Only show when offline
@@ -34,7 +34,7 @@ export function OfflineIndicator() {
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-100 py-2 px-4 text-center text-sm font-medium bg-yellow-500 text-yellow-950 animate-in slide-in-from-top duration-300">
+    <div className="fixed bottom-0 left-0 right-0 z-100 py-2 px-4 text-center text-sm font-medium bg-yellow-500 text-yellow-950 animate-in slide-in-from-bottom duration-300">
       <div className="flex items-center justify-center gap-2">
         <WifiOff className="h-4 w-4" />
         <span>You&apos;re offline. Changes are saved locally.</span>

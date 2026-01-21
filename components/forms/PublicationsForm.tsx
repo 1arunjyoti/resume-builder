@@ -92,53 +92,62 @@ export function PublicationsForm({ data, onChange }: PublicationsFormProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Publication Name</Label>
+                <Label htmlFor={`name-${pub.id}`}>Publication Name</Label>
                 <Input
+                  id={`name-${pub.id}`}
                   placeholder="e.g. My Great Article"
                   value={pub.name}
                   onChange={(e) =>
                     updatePublication(pub.id, "name", e.target.value)
                   }
+                  autoComplete="off"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Publisher</Label>
+                <Label htmlFor={`publisher-${pub.id}`}>Publisher</Label>
                 <Input
+                  id={`publisher-${pub.id}`}
                   placeholder="e.g. Medium, IEEE"
                   value={pub.publisher}
                   onChange={(e) =>
                     updatePublication(pub.id, "publisher", e.target.value)
                   }
+                  autoComplete="organization"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Release Date</Label>
+                <Label htmlFor={`releaseDate-${pub.id}`}>Release Date</Label>
                 <Input
+                  id={`releaseDate-${pub.id}`}
                   type="date"
                   value={pub.releaseDate}
                   onChange={(e) =>
                     updatePublication(pub.id, "releaseDate", e.target.value)
                   }
+                  autoComplete="off"
                 />
               </div>
               <div className="space-y-2">
-                <Label>URL</Label>
+                <Label htmlFor={`url-${pub.id}`}>URL</Label>
                 <Input
+                  id={`url-${pub.id}`}
                   placeholder="https://..."
                   value={pub.url}
                   onChange={(e) =>
                     updatePublication(pub.id, "url", e.target.value)
                   }
+                  autoComplete="url"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label htmlFor={`summary-${pub.id}`}>Description</Label>
               <RichTextEditor
+                id={`summary-${pub.id}`}
                 placeholder="Brief description of the publication..."
                 minHeight="min-h-[60px]"
                 value={pub.summary}

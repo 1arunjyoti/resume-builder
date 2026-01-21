@@ -148,18 +148,22 @@ export function SkillsForm({ data, onChange }: SkillsFormProps) {
           >
             <div className="space-y-3">
               <div className="space-y-2">
-                <Label>Proficiency Level</Label>
+                <Label htmlFor={`level-${skill.id}`}>Proficiency Level</Label>
                 <Input
+                  id={`level-${skill.id}`}
                   value={skill.level}
                   onChange={(e) =>
                     updateSkill(skill.id, "level", e.target.value)
                   }
                   placeholder="e.g. Native, Advanced"
+                  autoComplete="off"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label className="text-sm">Keywords / Skills</Label>
+                <Label htmlFor={`keywords-${skill.id}`} className="text-sm">
+                  Keywords / Skills
+                </Label>
                 <div className="flex flex-wrap gap-2 min-h-8">
                   {skill.keywords.map((keyword, kIndex) => (
                     <span
@@ -180,6 +184,7 @@ export function SkillsForm({ data, onChange }: SkillsFormProps) {
                 </div>
                 <div className="flex gap-2">
                   <Input
+                    id={`keywords-${skill.id}`}
                     placeholder="Add skill..."
                     value={newKeyword[skill.id] || ""}
                     onChange={(e) =>
@@ -190,6 +195,7 @@ export function SkillsForm({ data, onChange }: SkillsFormProps) {
                     }
                     onKeyDown={(e) => handleKeywordKeyDown(e, skill.id)}
                     className="flex-1"
+                    autoComplete="off"
                   />
                   <Button
                     type="button"

@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   basePath: "", // Modified for Vercel deployment (was /resume-builder)
   images: {
     unoptimized: true,
+    qualities: [75, 80],
   },
 };
 

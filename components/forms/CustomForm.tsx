@@ -165,6 +165,7 @@ export function CustomForm({ data, onChange }: CustomFormProps) {
                     onChange={(e) => updateSectionName(sec.id, e.target.value)}
                     className="text-lg font-semibold h-10"
                     placeholder="Section Title (e.g. Volunteering)"
+                    autoComplete="off"
                   />
                   <Button
                     type="button"
@@ -228,8 +229,11 @@ export function CustomForm({ data, onChange }: CustomFormProps) {
                       <div className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label>Item Name / Title</Label>
+                            <Label htmlFor={`name-${item.id}`}>
+                              Item Name / Title
+                            </Label>
                             <Input
+                              id={`name-${item.id}`}
                               placeholder="e.g. Volunteer"
                               value={item.name}
                               onChange={(e) =>
@@ -240,11 +244,15 @@ export function CustomForm({ data, onChange }: CustomFormProps) {
                                   e.target.value,
                                 )
                               }
+                              autoComplete="off"
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label>Subtitle / Organization</Label>
+                            <Label htmlFor={`description-${item.id}`}>
+                              Subtitle / Organization
+                            </Label>
                             <Input
+                              id={`description-${item.id}`}
                               placeholder="e.g. Red Cross"
                               value={item.description}
                               onChange={(e) =>
@@ -255,14 +263,16 @@ export function CustomForm({ data, onChange }: CustomFormProps) {
                                   e.target.value,
                                 )
                               }
+                              autoComplete="off"
                             />
                           </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label>Date</Label>
+                            <Label htmlFor={`date-${item.id}`}>Date</Label>
                             <Input
+                              id={`date-${item.id}`}
                               type="text"
                               placeholder="e.g. 2020 - Present"
                               value={item.date}
@@ -274,11 +284,13 @@ export function CustomForm({ data, onChange }: CustomFormProps) {
                                   e.target.value,
                                 )
                               }
+                              autoComplete="off"
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label>URL</Label>
+                            <Label htmlFor={`url-${item.id}`}>URL</Label>
                             <Input
+                              id={`url-${item.id}`}
                               placeholder="https://..."
                               value={item.url}
                               onChange={(e) =>
@@ -289,13 +301,17 @@ export function CustomForm({ data, onChange }: CustomFormProps) {
                                   e.target.value,
                                 )
                               }
+                              autoComplete="url"
                             />
                           </div>
                         </div>
 
                         <div className="space-y-2">
-                          <Label>Description</Label>
+                          <Label htmlFor={`summary-${item.id}`}>
+                            Description
+                          </Label>
                           <RichTextEditor
+                            id={`summary-${item.id}`}
                             placeholder="Details about this item..."
                             minHeight="min-h-[60px]"
                             value={item.summary}

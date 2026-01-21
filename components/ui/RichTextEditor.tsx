@@ -11,6 +11,8 @@ interface RichTextEditorProps {
   placeholder?: string;
   className?: string;
   minHeight?: string;
+  id?: string;
+  autoComplete?: string;
 }
 
 export function RichTextEditor({
@@ -19,6 +21,8 @@ export function RichTextEditor({
   placeholder,
   className,
   minHeight = "min-h-[100px]",
+  id,
+  autoComplete,
 }: RichTextEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -26,11 +30,13 @@ export function RichTextEditor({
     <div className={className}>
       <RichTextToolbar textareaRef={textareaRef} onChange={onChange} />
       <Textarea
+        id={id}
         ref={textareaRef}
         placeholder={placeholder}
         className={cn(minHeight, "mt-1")}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        autoComplete={autoComplete}
       />
     </div>
   );

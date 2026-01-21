@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   ChevronLeft,
   ChevronRight,
@@ -217,6 +218,7 @@ export function PDFImageViewer({ url }: PDFImageViewerProps) {
               onClick={goToPrevPage}
               disabled={pageNumber <= 1 || isLoading}
               className="h-8 w-8"
+              aria-label="Previous Page"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -229,6 +231,7 @@ export function PDFImageViewer({ url }: PDFImageViewerProps) {
               onClick={goToNextPage}
               disabled={pageNumber >= numPages || isLoading}
               className="h-8 w-8"
+              aria-label="Next Page"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -240,18 +243,39 @@ export function PDFImageViewer({ url }: PDFImageViewerProps) {
               onClick={zoomOut}
               disabled={scale <= 0.5 || isLoading}
               className="h-8 w-8"
+              aria-label="Zoom Out"
             >
               <ZoomOut className="h-4 w-4" />
             </Button>
-            <span className="text-sm text-muted-foreground min-w-12.5 text-center">
-              {Math.round(scale * 100)}%
-            </span>
+            <div className="flex items-center">
+              <Input
+                type="number"
+                min={50}
+                max={200}
+                step={25}
+                value={Math.round(scale * 100)}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val)) {
+                    setScale(Math.max(0.5, Math.min(2.0, val / 100)));
+                  }
+                }}
+                className="w-16 h-8 text-center px-1 py-0 border-none bg-transparent focus-visible:ring-0 after:content-['%']"
+                name="zoom"
+                autoComplete="off"
+                aria-label="Zoom Level Percentage"
+              />
+              <span className="text-sm text-muted-foreground -ml-2 mr-2">
+                %
+              </span>
+            </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={zoomIn}
               disabled={scale >= 2.0 || isLoading}
               className="h-8 w-8"
+              aria-label="Zoom In"
             >
               <ZoomIn className="h-4 w-4" />
             </Button>

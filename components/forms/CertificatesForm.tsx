@@ -102,53 +102,62 @@ export function CertificatesForm({ data, onChange }: CertificatesFormProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Certificate Name</Label>
+                <Label htmlFor={`name-${cert.id}`}>Certificate Name</Label>
                 <Input
+                  id={`name-${cert.id}`}
                   placeholder="e.g. AWS Certified Solutions Architect"
                   value={cert.name}
                   onChange={(e) =>
                     updateCertificate(cert.id, "name", e.target.value)
                   }
+                  autoComplete="off"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Issuer</Label>
+                <Label htmlFor={`issuer-${cert.id}`}>Issuer</Label>
                 <Input
+                  id={`issuer-${cert.id}`}
                   placeholder="e.g. Amazon Web Services"
                   value={cert.issuer}
                   onChange={(e) =>
                     updateCertificate(cert.id, "issuer", e.target.value)
                   }
+                  autoComplete="organization"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Date</Label>
+                <Label htmlFor={`date-${cert.id}`}>Date</Label>
                 <Input
+                  id={`date-${cert.id}`}
                   type="date"
                   value={cert.date}
                   onChange={(e) =>
                     updateCertificate(cert.id, "date", e.target.value)
                   }
+                  autoComplete="off"
                 />
               </div>
               <div className="space-y-2">
-                <Label>URL</Label>
+                <Label htmlFor={`url-${cert.id}`}>URL</Label>
                 <Input
+                  id={`url-${cert.id}`}
                   placeholder="https://..."
                   value={cert.url}
                   onChange={(e) =>
                     updateCertificate(cert.id, "url", e.target.value)
                   }
+                  autoComplete="url"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label htmlFor={`summary-${cert.id}`}>Description</Label>
               <RichTextEditor
+                id={`summary-${cert.id}`}
                 placeholder="Brief description of the certification..."
                 minHeight="min-h-[60px]"
                 value={cert.summary}

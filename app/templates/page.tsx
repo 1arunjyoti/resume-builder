@@ -137,15 +137,18 @@ export default function TemplatesPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back to Home</span>
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between relative">
+          <Link href="/">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2 pl-2 pr-2 sm:pr-4"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Back to Home</span>
+            </Button>
           </Link>
-          <div className="font-semibold text-lg flex items-center gap-2">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-semibold text-lg flex items-center gap-2 whitespace-nowrap">
             <Layout className="h-5 w-5" />
             Template Catalog
           </div>
@@ -191,7 +194,7 @@ export default function TemplatesPage() {
 
           {/* Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTemplates.map((template) => (
+            {filteredTemplates.map((template, index) => (
               <div
                 key={template.id}
                 className={`group relative rounded-xl border bg-card text-card-foreground shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden ${
@@ -215,7 +218,7 @@ export default function TemplatesPage() {
                           height={380}
                           className="object-contain"
                           quality={80}
-                          priority={false}
+                          priority={index < 2}
                           sizes="(max-width: 640px) 200px, (max-width: 1024px) 280px, 300px"
                         />
                       </div>

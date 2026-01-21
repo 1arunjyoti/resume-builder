@@ -190,53 +190,62 @@ export function ProjectsForm({ data, onChange }: ProjectsFormProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Project Name</Label>
+                <Label htmlFor={`name-${proj.id}`}>Project Name</Label>
                 <Input
+                  id={`name-${proj.id}`}
                   placeholder="Project Name"
                   value={proj.name}
                   onChange={(e) =>
                     updateProject(proj.id, "name", e.target.value)
                   }
+                  autoComplete="off"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Project URL</Label>
+                <Label htmlFor={`url-${proj.id}`}>Project URL</Label>
                 <Input
+                  id={`url-${proj.id}`}
                   placeholder="https://project.com"
                   value={proj.url}
                   onChange={(e) =>
                     updateProject(proj.id, "url", e.target.value)
                   }
+                  autoComplete="url"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Start Date</Label>
+                <Label htmlFor={`startDate-${proj.id}`}>Start Date</Label>
                 <Input
+                  id={`startDate-${proj.id}`}
                   type="month"
                   value={proj.startDate}
                   onChange={(e) =>
                     updateProject(proj.id, "startDate", e.target.value)
                   }
+                  autoComplete="off"
                 />
               </div>
               <div className="space-y-2">
-                <Label>End Date</Label>
+                <Label htmlFor={`endDate-${proj.id}`}>End Date</Label>
                 <Input
+                  id={`endDate-${proj.id}`}
                   type="month"
                   value={proj.endDate}
                   onChange={(e) =>
                     updateProject(proj.id, "endDate", e.target.value)
                   }
+                  autoComplete="off"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label htmlFor={`description-${proj.id}`}>Description</Label>
               <RichTextEditor
+                id={`description-${proj.id}`}
                 placeholder="Brief description of the project..."
                 minHeight="min-h-[100px]"
                 value={proj.description}
@@ -247,7 +256,9 @@ export function ProjectsForm({ data, onChange }: ProjectsFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm">Technologies Used</Label>
+              <Label htmlFor={`keywords-${proj.id}`} className="text-sm">
+                Technologies Used
+              </Label>
               <div className="flex flex-wrap gap-2 min-h-8">
                 {proj.keywords.map((keyword, kIndex) => (
                   <span
@@ -268,6 +279,7 @@ export function ProjectsForm({ data, onChange }: ProjectsFormProps) {
               </div>
               <div className="flex gap-2">
                 <Input
+                  id={`keywords-${proj.id}`}
                   placeholder="Add technology..."
                   value={newKeyword[proj.id] || ""}
                   onChange={(e) =>
@@ -278,6 +290,7 @@ export function ProjectsForm({ data, onChange }: ProjectsFormProps) {
                   }
                   onKeyDown={(e) => handleKeywordKeyDown(e, proj.id)}
                   className="flex-1"
+                  autoComplete="off"
                 />
                 <Button
                   type="button"

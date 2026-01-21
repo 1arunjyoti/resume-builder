@@ -257,18 +257,22 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
               <Label htmlFor="name">Full Name</Label>
               <Input
                 id="name"
+                name="name"
                 placeholder="John Doe"
                 value={data.name}
                 onChange={(e) => updateField("name", e.target.value)}
+                autoComplete="name"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="label">Professional Title</Label>
               <Input
                 id="label"
+                name="label"
                 placeholder="Software Engineer"
                 value={data.label}
                 onChange={(e) => updateField("label", e.target.value)}
+                autoComplete="organization-title"
               />
             </div>
           </div>
@@ -278,20 +282,24 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="john@example.com"
                 value={data.email}
                 onChange={(e) => updateField("email", e.target.value)}
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>
               <Input
                 id="phone"
+                name="phone"
                 type="tel"
-                placeholder="+1 234 567 8900"
+                placeholder="+1 (555) 123-4567"
                 value={data.phone}
                 onChange={(e) => updateField("phone", e.target.value)}
+                autoComplete="tel"
               />
               <p className="text-[10px] text-muted-foreground">
                 Include country code (e.g. +91)
@@ -303,10 +311,12 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
             <Label htmlFor="url">Website / Portfolio</Label>
             <Input
               id="url"
+              name="url"
               type="url"
-              placeholder="https://yourportfolio.com"
+              placeholder="https://johndoe.com"
               value={data.url}
               onChange={(e) => updateField("url", e.target.value)}
+              autoComplete="url"
             />
           </div>
 
@@ -315,18 +325,22 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
               <Label htmlFor="city">City</Label>
               <Input
                 id="city"
+                name="city"
                 placeholder="San Francisco"
                 value={data.location.city}
                 onChange={(e) => updateLocation("city", e.target.value)}
+                autoComplete="address-level2"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="country">Country</Label>
               <Input
                 id="country"
+                name="country"
                 placeholder="United States"
                 value={data.location.country}
                 onChange={(e) => updateLocation("country", e.target.value)}
+                autoComplete="country-name"
               />
             </div>
           </div>
@@ -339,6 +353,7 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
               </span>
             </div>
             <RichTextEditor
+              id="summary"
               value={data.summary}
               onChange={(value) => updateField("summary", value)}
               placeholder="A brief summary of your professional background and career objectives..."
@@ -393,34 +408,45 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
               <div className="flex items-start gap-4">
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label>Network</Label>
+                    <Label htmlFor={`profile-network-${index}`}>Network</Label>
                     <Input
+                      id={`profile-network-${index}`}
+                      name={`profile-network-${index}`}
                       placeholder="LinkedIn"
                       value={profile.network}
                       onChange={(e) =>
                         updateProfile(index, "network", e.target.value)
                       }
+                      autoComplete="off"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Username</Label>
+                    <Label htmlFor={`profile-username-${index}`}>
+                      Username
+                    </Label>
                     <Input
+                      id={`profile-username-${index}`}
+                      name={`profile-username-${index}`}
                       placeholder="johndoe"
                       value={profile.username}
                       onChange={(e) =>
                         updateProfile(index, "username", e.target.value)
                       }
+                      autoComplete="off"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>URL</Label>
+                    <Label htmlFor={`profile-url-${index}`}>URL</Label>
                     <Input
+                      id={`profile-url-${index}`}
+                      name={`profile-url-${index}`}
                       type="url"
                       placeholder="https://linkedin.com/in/johndoe"
                       value={profile.url}
                       onChange={(e) =>
                         updateProfile(index, "url", e.target.value)
                       }
+                      autoComplete="off"
                     />
                   </div>
                 </div>

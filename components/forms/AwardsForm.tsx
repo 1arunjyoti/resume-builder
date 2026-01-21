@@ -88,39 +88,46 @@ export function AwardsForm({ data, onChange }: AwardsFormProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Award Title</Label>
+                <Label htmlFor={`title-${item.id}`}>Award Title</Label>
                 <Input
+                  id={`title-${item.id}`}
                   placeholder="e.g. Employee of the Month"
                   value={item.title}
                   onChange={(e) =>
                     updateAward(item.id, "title", e.target.value)
                   }
+                  autoComplete="off"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Awarder</Label>
+                <Label htmlFor={`awarder-${item.id}`}>Awarder</Label>
                 <Input
+                  id={`awarder-${item.id}`}
                   placeholder="e.g. Company Inc."
                   value={item.awarder}
                   onChange={(e) =>
                     updateAward(item.id, "awarder", e.target.value)
                   }
+                  autoComplete="organization"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Date</Label>
+              <Label htmlFor={`date-${item.id}`}>Date</Label>
               <Input
+                id={`date-${item.id}`}
                 type="date"
                 value={item.date}
                 onChange={(e) => updateAward(item.id, "date", e.target.value)}
+                autoComplete="off"
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label htmlFor={`summary-${item.id}`}>Description</Label>
               <RichTextEditor
+                id={`summary-${item.id}`}
                 placeholder="Brief description of the award..."
                 minHeight="min-h-[60px]"
                 value={item.summary}

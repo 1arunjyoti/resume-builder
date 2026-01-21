@@ -269,6 +269,9 @@ function EditorContent() {
                 }
                 className="w-full text-base sm:text-lg font-semibold bg-transparent border-0 focus:outline-none focus:ring-0 p-0 text-foreground placeholder:text-muted-foreground truncate"
                 placeholder="Resume Title"
+                name="title"
+                autoComplete="off"
+                aria-label="Resume Title"
               />
               <p className="text-xs text-muted-foreground hidden sm:block truncate">
                 Last saved:{" "}

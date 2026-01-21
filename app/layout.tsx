@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://privatecv.vercel.app"),
   title: {
     default: "PrivateCV - Privacy-First Resume Creator",
     template: "%s | PrivateCV",
