@@ -11,7 +11,7 @@ import {
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import {
   FileText,
-  Shield,
+  EyeOff,
   WifiOff,
   Layout,
   Download,
@@ -196,9 +196,9 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 ">
               <FeatureCard
-                icon={<Shield className="h-8 w-8 text-primary" />}
-                title="Privacy First"
-                description="Your data never leaves your device. We use IndexedDB to store everything locally in your browser."
+                icon={<EyeOff className="h-8 w-8 text-primary" />}
+                title="Anonymous Analytics"
+                description="We use anonymous page view tracking to improve the app. Your resume content and personal data remain 100% private and offline."
               />
               <FeatureCard
                 icon={<WifiOff className="h-8 w-8 text-primary" />}

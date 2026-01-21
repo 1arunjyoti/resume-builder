@@ -76,8 +76,8 @@ export default function PrivacyPage() {
               />
               <PrivacyAspect
                 icon={<EyeOff className="h-8 w-8 text-primary" />}
-                title="No Tracking"
-                description="We do not use analytics scripts, cookies, or trackers. We don't know who you are, what you're building, or how many people use our tool. Truly."
+                title="Anonymous Analytics"
+                description="We use Vercel Analytics to understand website traffic and performance to improve the app. This data is completely anonymous and does NOT include any personal information from your resume."
               />
               <PrivacyAspect
                 icon={<Lock className="h-8 w-8 text-primary" />}
