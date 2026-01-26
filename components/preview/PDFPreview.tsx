@@ -45,58 +45,58 @@ const PDFImageViewer = dynamic(
 // Dynamically import PDF generation to avoid SSR issues
 const templateRegistry = {
   classic: () =>
-    import("@/components/templates/ClassicTemplate").then(
+    import("@/components/templates/FactoryTemplates").then(
       (m) => m.generateClassicPDF,
     ),
   professional: () =>
-    import("@/components/templates/ProfessionalTemplate").then(
+    import("@/components/templates/FactoryTemplates").then(
       (m) => m.generateProfessionalPDF,
     ),
   "classic-slate": () =>
-    import("@/components/templates/ClassicSlateTemplate").then(
+    import("@/components/templates/FactoryTemplates").then(
       (m) => m.generateClassicSlatePDF,
     ),
   creative: () =>
-    import("@/components/templates/CreativeTemplate").then(
+    import("@/components/templates/FactoryTemplates").then(
       (m) => m.generateCreativePDF,
     ),
   glow: () =>
-    import("@/components/templates/GlowTemplate").then(
+    import("@/components/templates/FactoryTemplates").then(
       (m) => m.generateGlowPDF,
     ),
 
   developer: () =>
-    import("@/components/templates/DeveloperTemplate").then(
+    import("@/components/templates/FactoryTemplates").then(
       (m) => m.generateDeveloperPDF,
     ),
   developer2: () =>
-    import("@/components/templates/Developer2Template").then(
+    import("@/components/templates/FactoryTemplates").then(
       (m) => m.generateDeveloper2PDF,
     ),
   ats: () =>
-    import("@/components/templates/ATSTemplate").then((m) => m.generatePDF),
+    import("@/components/templates/FactoryTemplates").then((m) => m.generatePDF),
   modern: () =>
-    import("@/components/templates/ModernTemplate").then(
+    import("@/components/templates/FactoryTemplates").then(
       (m) => m.generateModernPDF,
     ),
   elegant: () =>
-    import("@/components/templates/ElegantTemplate").then(
+    import("@/components/templates/FactoryTemplates").then(
       (m) => m.generateElegantPDF,
     ),
   multicolumn: () =>
-    import("@/components/templates/MulticolumnTemplate").then(
+    import("@/components/templates/FactoryTemplates").then(
       (m) => m.generateMulticolumnPDF,
     ),
   stylish: () =>
-    import("@/components/templates/StylishTemplate").then(
+    import("@/components/templates/FactoryTemplates").then(
       (m) => m.generateStylishPDF,
     ),
   timeline: () =>
-    import("@/components/templates/TimelineTemplate").then(
+    import("@/components/templates/FactoryTemplates").then(
       (m) => m.generateTimelinePDF,
     ),
   polished: () =>
-    import("@/components/templates/PolishedTemplate").then(
+    import("@/components/templates/FactoryTemplates").then(
       (m) => m.generatePolishedPDF,
     ),
 } as const;

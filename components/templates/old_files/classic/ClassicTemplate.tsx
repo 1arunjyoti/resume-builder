@@ -6,19 +6,19 @@ import "@/lib/fonts"; // Auto-registers all fonts
 import { getSectionHeadingWrapperStyles } from "@/lib/template-styles";
 
 // Sub-components
-import { ClassicHeader } from "./classic/ClassicHeader";
-import { ClassicSummary } from "./classic/ClassicSummary";
-import { ClassicExperience } from "./classic/ClassicExperience";
-import { ClassicEducation } from "./classic/ClassicEducation";
-import { ClassicSkills } from "./classic/ClassicSkills";
-import { ClassicProjects } from "./classic/ClassicProjects";
-import { ClassicCertificates } from "./classic/ClassicCertificates";
-import { ClassicAwards } from "./classic/ClassicAwards";
-import { ClassicPublications } from "./classic/ClassicPublications";
-import { ClassicReferences } from "./classic/ClassicReferences";
-import { ClassicLanguages } from "./classic/ClassicLanguages";
-import { ClassicInterests } from "./classic/ClassicInterests";
-import { ClassicCustom } from "./classic/ClassicCustom";
+import { ClassicHeader } from "./ClassicHeader";
+import { ClassicSummary } from "./ClassicSummary";
+import { ClassicExperience } from "./ClassicExperience";
+import { ClassicEducation } from "./ClassicEducation";
+import { ClassicSkills } from "./ClassicSkills";
+import { ClassicProjects } from "./ClassicProjects";
+import { ClassicCertificates } from "./ClassicCertificates";
+import { ClassicAwards } from "./ClassicAwards";
+import { ClassicPublications } from "./ClassicPublications";
+import { ClassicReferences } from "./ClassicReferences";
+import { ClassicLanguages } from "./ClassicLanguages";
+import { ClassicInterests } from "./ClassicInterests";
+import { ClassicCustom } from "./ClassicCustom";
 
 interface ClassicTemplateProps {
   resume: Resume;

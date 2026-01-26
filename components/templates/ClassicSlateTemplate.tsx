@@ -6,19 +6,19 @@ import "@/lib/fonts"; // Auto-registers all fonts
 import { getSectionHeadingWrapperStyles } from "@/lib/template-styles";
 
 // Sub-components
-import { ClassicHeader } from "./classic/ClassicHeader";
-import { ClassicSummary } from "./classic/ClassicSummary";
-import { ClassicExperience } from "./classic/ClassicExperience";
-import { ClassicEducation } from "./classic/ClassicEducation";
-import { ClassicSkills } from "./classic/ClassicSkills";
-import { ClassicProjects } from "./classic/ClassicProjects";
-import { ClassicCertificates } from "./classic/ClassicCertificates";
-import { ClassicAwards } from "./classic/ClassicAwards";
-import { ClassicPublications } from "./classic/ClassicPublications";
-import { ClassicReferences } from "./classic/ClassicReferences";
-import { ClassicLanguages } from "./classic/ClassicLanguages";
-import { ClassicInterests } from "./classic/ClassicInterests";
-import { ClassicCustom } from "./classic/ClassicCustom";
+import { ClassicHeader } from "./old_files/classic/ClassicHeader";
+import { ClassicSummary } from "./old_files/classic/ClassicSummary";
+import { ClassicExperience } from "./old_files/classic/ClassicExperience";
+import { ClassicEducation } from "./old_files/classic/ClassicEducation";
+import { ClassicSkills } from "./old_files/classic/ClassicSkills";
+import { ClassicProjects } from "./old_files/classic/ClassicProjects";
+import { ClassicCertificates } from "./old_files/classic/ClassicCertificates";
+import { ClassicAwards } from "./old_files/classic/ClassicAwards";
+import { ClassicPublications } from "./old_files/classic/ClassicPublications";
+import { ClassicReferences } from "./old_files/classic/ClassicReferences";
+import { ClassicLanguages } from "./old_files/classic/ClassicLanguages";
+import { ClassicInterests } from "./old_files/classic/ClassicInterests";
+import { ClassicCustom } from "./old_files/classic/ClassicCustom";
 
 interface ClassicSlateTemplateProps {
   resume: Resume;

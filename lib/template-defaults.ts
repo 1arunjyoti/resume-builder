@@ -1632,13 +1632,34 @@ export const TEMPLATE_DEFAULTS: Record<string, Partial<LayoutSettings>> = {
   },
 };
 
+// Import the new theme system for backwards compatibility
+import { getCompiledTheme, COMPILED_THEMES } from "./theme-system";
+
 /**
  * Get default layout settings for a specific template
+ * 
+ * This function now uses the new theme system internally while maintaining
+ * backwards compatibility. The theme system provides:
+ * - Composable presets (typography, headings, layouts, entries)
+ * - Deep merge inheritance to reduce duplication
+ * - ~50 lines per template instead of ~150
+ * 
  * @param templateId The template identifier
  * @returns Complete layout settings with template-specific defaults
  */
 export function getTemplateDefaults(templateId: string = 'ats'): Partial<LayoutSettings> {
-  return TEMPLATE_DEFAULTS[templateId] || TEMPLATE_DEFAULTS.ats;
+  // First try the new theme system
+  if (COMPILED_THEMES[templateId]) {
+    return COMPILED_THEMES[templateId];
+  }
+  
+  // Fallback to legacy TEMPLATE_DEFAULTS for any templates not yet migrated
+  if (TEMPLATE_DEFAULTS[templateId]) {
+    return TEMPLATE_DEFAULTS[templateId];
+  }
+  
+  // Ultimate fallback to ATS from theme system
+  return getCompiledTheme('ats');
 }
 
 /**
@@ -1649,15 +1670,20 @@ export function getTemplateDefaults(templateId: string = 'ats'): Partial<LayoutS
 export function getTemplateThemeColor(templateId: string = 'ats'): string {
   const themeColors: Record<string, string> = {
     classic: '#000000',      // Black - traditional
-    ats: '#000000',          // Black - professional
-    creative: '#3b82f6',     // Blue - modern and friendly
-    modern: '#64748b',       // Slate - minimalist
-    professional: '#1e293b', // Dark slate - executive
-    elegant: '#8b5cf6',      // Purple - sophisticated
-    glow: '#F4D03F',         // Gold - high contrast
-    stylish: '#3b82f6',      // Blue - modern
-    polished: '#0e7490',     // Teal - polished
+    ats: '#2563eb',          // Blue - professional
+    creative: '#8b5cf6',     // Purple - modern and friendly
+    modern: '#10b981',       // Emerald - minimalist
+    professional: '#0f172a', // Dark slate - executive
+    elegant: '#2c3e50',      // Dark blue - sophisticated
+    glow: '#f59e0b',         // Amber - high contrast
+    stylish: '#ec4899',      // Pink - modern
+    polished: '#0d9488',     // Teal - polished
+    "classic-slate": '#334155', // Slate
+    multicolumn: '#0284c7',  // Sky blue
+    timeline: '#6366f1',     // Indigo
+    developer: '#22c55e',    // Green
+    developer2: '#3b82f6',   // Blue
   };
   
-  return themeColors[templateId] || '#000000';
+  return themeColors[templateId] || '#2563eb';
 }
