@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Document, Page, View, StyleSheet, pdf } from "@react-pdf/renderer";
 import type { Resume } from "@/db";
 import { getTemplateDefaults } from "@/lib/template-defaults";

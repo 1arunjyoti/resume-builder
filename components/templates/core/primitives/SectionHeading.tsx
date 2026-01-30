@@ -163,7 +163,7 @@ export const SectionHeading: React.FC<SectionHeadingProps> = ({
   });
 
   return (
-    <View style={styles.wrapper}>
+    <View style={styles.wrapper} minPresenceAhead={50}>
       <Text style={styles.text}>{formatTitle(title)}</Text>
     </View>
   );

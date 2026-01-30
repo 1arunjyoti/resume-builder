@@ -631,11 +631,12 @@ export const TEMPLATE_THEMES: Record<string, ThemeConfig> = {
     contact: "iconDash",
     overrides: {
       leftColumnWidth: 33, // Optimized width
-      headerBottomMargin: 20,
-      nameFontSize: 24, // Reduced fro 30
+      headerPosition: "left", // Default to left alignment per user request
+      headerBottomMargin: 24, // Increased for better separation
+      nameFontSize: 20, // Balanced size (was 24)
       showProfileImage: true,
       profileImageBorder: true,
-      skillsListStyle: "blank",
+      skillsListStyle: "inline",
       languagesFluencyBold: true,
       interestsKeywordsItalic: true,
       experienceDateBold: true,
@@ -650,7 +651,7 @@ export const TEMPLATE_THEMES: Record<string, ThemeConfig> = {
       awardsAwarderItalic: true,
       referencesPositionItalic: true,
       sectionOrder: [
-        "summary", "skills", "projects", "work", "education",
+        "summary", "education", "skills", "projects", "work", 
         "certificates", "languages", "interests", "awards",
         "publications", "references", "custom",
       ],
@@ -659,11 +660,12 @@ export const TEMPLATE_THEMES: Record<string, ThemeConfig> = {
   
   professional: {
     typography: "professional",
-    headings: "bottomBorder",
+    headings: "filled", // Style 4
     layout: "twoColumnLeft",
     entries: "compact",
     contact: "iconPipe",
     overrides: {
+      headerPosition: "left", // Default to left alignment
       headerBottomMargin: 15,
       sectionOrder: [
         "summary", "work", "education", "skills", "certificates",
@@ -731,12 +733,13 @@ export const TEMPLATE_THEMES: Record<string, ThemeConfig> = {
   glow: {
     typography: "modern",
     headings: "accent",
-    layout: "twoColumnLeft",
+    layout: "singleColumn",
     entries: "modern",
     contact: "iconDash",
     overrides: {
       showProfileImage: true,
       profileImageBorder: true,
+      headerPosition: "left",
     },
   },
   

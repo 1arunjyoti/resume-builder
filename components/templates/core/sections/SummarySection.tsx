@@ -29,7 +29,7 @@ export const SummarySection: React.FC<SummarySectionProps> = ({
   fontSize,
   getColor,
   lineHeight = 1.4,
-  sectionTitle = "Professional Summary",
+  sectionTitle = "Profile",
   sectionMargin,
   containerStyle,
   useRichText = true,

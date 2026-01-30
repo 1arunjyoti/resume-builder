@@ -90,6 +90,12 @@ export interface TemplateConfig {
   sidebarBackground?: boolean;
   /** Sidebar background color */
   sidebarBackgroundColor?: string;
+  /** Whether the header should span the full width of the page (ignoring page margins) */
+  fullWidthHeader?: boolean;
+  /** Background color for the full-width header */
+  headerBackgroundColor?: string;
+  /** Text color associated with the full-width header context */
+  headerTextColor?: string;
 }
 
 export interface HeaderProps {
@@ -99,6 +105,7 @@ export interface HeaderProps {
   getColor: GetColorFn;
   fontSize: number;
   align: "left" | "center" | "right";
+  headerTextColor?: string;
 }
 
 export interface TemplateProps {
@@ -169,6 +176,7 @@ const DefaultHeader: React.FC<HeaderProps & { showImage?: boolean }> = ({
   getColor,
   fontSize,
   align,
+  headerTextColor,
   showImage = true,
 }) => {
   const nameStyle = {
@@ -181,7 +189,7 @@ const DefaultHeader: React.FC<HeaderProps & { showImage?: boolean }> = ({
           ? fonts.bold
           : fonts.base,
     textTransform: "uppercase" as const,
-    color: getColor("name"),
+    color: getColor("name", headerTextColor),
     lineHeight: settings.nameLineHeight || 1.2,
     letterSpacing:
       ((settings as unknown as Record<string, unknown>)
@@ -202,7 +210,7 @@ const DefaultHeader: React.FC<HeaderProps & { showImage?: boolean }> = ({
     lineHeight: settings.titleLineHeight || 1.2,
     marginBottom: 8,
     textAlign: align,
-    color: getColor("title"),
+    color: getColor("title", headerTextColor),
   };
 
   return (
@@ -222,12 +230,22 @@ const DefaultHeader: React.FC<HeaderProps & { showImage?: boolean }> = ({
           size={settings.profileImageSize}
           shape={settings.profileImageShape}
           border={settings.profileImageBorder}
-          borderColor={getColor("decorations")}
+          borderColor={
+            headerTextColor ? headerTextColor : getColor("decorations")
+          }
           style={{ marginBottom: 10 }}
         />
       )}
-      {basics.name && <Text style={nameStyle}>{basics.name}</Text>}
-      {basics.label && <Text style={titleStyle}>{basics.label}</Text>}
+      {basics.name && (
+        <Text style={nameStyle} hyphenationCallback={(word) => [word]}>
+          {basics.name}
+        </Text>
+      )}
+      {basics.label && (
+        <Text style={titleStyle} hyphenationCallback={(word) => [word]}>
+          {basics.label}
+        </Text>
+      )}
       <ContactInfo
         items={basicsToContactItems(basics)}
         style={settings.personalDetailsArrangement === 2 ? "stacked" : "bar"}
@@ -243,6 +261,7 @@ const DefaultHeader: React.FC<HeaderProps & { showImage?: boolean }> = ({
             .contactLinkUnderline as boolean) ?? true
         }
         lineHeight={settings.lineHeight}
+        color={headerTextColor}
       />
     </View>
   );
@@ -294,7 +313,9 @@ const SectionRenderer: React.FC<SectionRendererProps> = ({
     SectionHeading,
   };
 
-  const sectionStyle = { marginBottom: sectionMargin };
+  const sectionStyle: { marginBottom: number } = {
+    marginBottom: sectionMargin,
+  };
 
   switch (sectionId) {
     case "summary":
@@ -435,22 +456,22 @@ export function createTemplate(config: TemplateConfig) {
     const marginV = mmToPt(settings.marginVertical || 12);
     const sectionMargin = settings.sectionMargin || 8;
 
-    // Header alignment - matches Classic template logic
+    // Header alignment - generic logic for all templates
+    // If headerPosition is explicitly set to an alignment value, use it.
+    // Note: 'top' in headerPosition maps to 'center' alignment in this context
+    const pos = settings.headerPosition as string;
     const headerAlign: "left" | "center" | "right" =
-      // For Classic template, use headerPosition setting
-      config.id === "classic"
-        ? settings.headerPosition === "left" ||
-          settings.headerPosition === "right"
-          ? settings.headerPosition
-          : "center"
-        : // For other templates, use existing logic
-          config.layoutType === "single-column-centered"
+      pos === "left" || pos === "right"
+        ? (pos as "left" | "right")
+        : pos === "top" || pos === "center"
           ? "center"
-          : settings.personalDetailsAlign === "center"
+          : config.layoutType === "single-column-centered"
             ? "center"
-            : settings.personalDetailsAlign === "right"
-              ? "right"
-              : "left";
+            : settings.personalDetailsAlign === "center"
+              ? "center"
+              : settings.personalDetailsAlign === "right"
+                ? "right"
+                : "left";
 
     // Column widths
     const leftWidth = settings.leftColumnWidth || 30;
@@ -474,7 +495,7 @@ export function createTemplate(config: TemplateConfig) {
     // Create styles
     const styles = StyleSheet.create({
       page: {
-        paddingHorizontal: marginH,
+        paddingHorizontal: marginH, // Consistent padding for all pages
         paddingVertical: marginV,
         fontFamily: fonts.base,
         fontSize,
@@ -485,6 +506,10 @@ export function createTemplate(config: TemplateConfig) {
         ...(config.layoutType === "creative-sidebar"
           ? { paddingTop: 30, paddingBottom: 30 }
           : {}),
+      },
+      // Body content wrapper - no longer needs to handle padding
+      body: {
+        flexGrow: 1,
       },
       header: {
         marginBottom: settings.headerBottomMargin || 12,
@@ -497,6 +522,21 @@ export function createTemplate(config: TemplateConfig) {
         borderBottomColor: getColor("decorations"),
         borderBottomStyle: "solid",
         paddingBottom: settings.sectionHeadingStyle === 1 ? 8 : 0,
+        // Full width header support via negative margins
+        ...(config.fullWidthHeader
+          ? {
+              backgroundColor: config.headerBackgroundColor,
+              // Break out of page padding
+              marginTop: -marginV,
+              marginLeft: -marginH,
+              marginRight: -marginH,
+              // Restore internal padding
+              paddingTop: marginV,
+              paddingHorizontal: marginH,
+              // Add bottom spacing inside the color block
+              paddingBottom: marginV,
+            }
+          : {}),
       },
       columnsContainer: {
         flexDirection: "row",
@@ -569,6 +609,7 @@ export function createTemplate(config: TemplateConfig) {
                   getColor={getColor}
                   fontSize={fontSize}
                   align={headerAlign}
+                  headerTextColor={config.headerTextColor}
                 />
               </View>
 
@@ -604,6 +645,7 @@ export function createTemplate(config: TemplateConfig) {
                   getColor={getColor}
                   fontSize={fontSize}
                   align={headerAlign}
+                  headerTextColor={config.headerTextColor}
                 />
               </View>
 
@@ -645,7 +687,15 @@ export function createTemplate(config: TemplateConfig) {
 
               <View style={styles.sidebar}>
                 <View
-                  style={{ marginBottom: sectionMargin, alignItems: "center" }}
+                  style={{
+                    marginBottom: settings.headerBottomMargin || 24,
+                    alignItems:
+                      headerAlign === "center"
+                        ? "center"
+                        : headerAlign === "right"
+                          ? "flex-end"
+                          : "flex-start",
+                  }}
                 >
                   <HeaderComponent
                     basics={basics}
@@ -653,7 +703,7 @@ export function createTemplate(config: TemplateConfig) {
                     fonts={fonts}
                     getColor={getColor}
                     fontSize={fontSize}
-                    align="center"
+                    align={headerAlign}
                   />
                 </View>
                 {leftContent.map(renderSection)}

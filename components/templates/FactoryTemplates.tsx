@@ -1,10 +1,10 @@
 /**
  * Factory-based Templates
- * 
+ *
  * All templates are now created using the template factory system.
  * Each template is defined by a simple configuration object (~20-50 lines)
  * instead of 300-600 lines of duplicated rendering logic.
- * 
+ *
  * Benefits:
  * - 90%+ code reduction per template
  * - Consistent behavior across all templates
@@ -32,15 +32,24 @@ const classicConfig: TemplateConfig = {
   defaultThemeColor: "#000000",
   // Support dynamic column layout - single or two-column based on settings
   leftColumnSections: [
-    "skills", "education", "languages", "interests", 
-    "awards", "certificates", "references"
+    "skills",
+    "education",
+    "languages",
+    "interests",
+    "awards",
+    "certificates",
+    "references",
   ],
   rightColumnSections: [
-    "summary", "work", "projects", "custom", "publications"  
+    "summary",
+    "work",
+    "projects",
+    "custom",
+    "publications",
   ],
   // Classic-specific customizations (only valid LayoutSettings properties)
   themeOverrides: {
-    // Typography - Times-Roman 
+    // Typography - Times-Roman
     fontFamily: "Times-Roman",
     // Header border for sectionHeadingStyle === 1 (handled in factory)
     headerBottomMargin: 4,
@@ -49,11 +58,11 @@ const classicConfig: TemplateConfig = {
     bulletMargin: 2,
     // Entry styling
     entryIndentBody: false,
-    entryTitleSize: "M", 
+    entryTitleSize: "M",
     entrySubtitleStyle: "italic",
     // Contact styling
     contactSeparator: "pipe",
-  }
+  },
 };
 
 const modernConfig: TemplateConfig = {
@@ -70,8 +79,22 @@ const creativeConfig: TemplateConfig = {
   defaultThemeColor: "#8b5cf6",
   sidebarBackground: true,
   sidebarBackgroundColor: "#f4f4f0",
-  leftColumnSections: ["summary", "certificates", "languages", "interests"],
-  rightColumnSections: ["work", "education", "skills", "projects", "awards", "publications", "references", "custom"],
+  leftColumnSections: [
+    "summary",
+    "certificates",
+    "languages",
+    "interests",
+    "awards",
+  ],
+  rightColumnSections: [
+    "work",
+    "education",
+    "skills",
+    "projects",
+    "publications",
+    "references",
+    "custom",
+  ],
 };
 
 const professionalConfig: TemplateConfig = {
@@ -79,8 +102,22 @@ const professionalConfig: TemplateConfig = {
   name: "Professional",
   layoutType: "two-column-sidebar-left",
   defaultThemeColor: "#0f172a",
-  leftColumnSections: ["skills", "education", "languages", "certificates", "awards", "interests"],
-  rightColumnSections: ["summary", "work", "projects", "publications", "references", "custom"],
+  leftColumnSections: [
+    "skills",
+    "education",
+    "languages",
+    "certificates",
+    "awards",
+    "interests",
+  ],
+  rightColumnSections: [
+    "summary",
+    "work",
+    "projects",
+    "publications",
+    "references",
+    "custom",
+  ],
 };
 
 const elegantConfig: TemplateConfig = {
@@ -95,17 +132,29 @@ const classicSlateConfig: TemplateConfig = {
   name: "Classic Slate",
   layoutType: "two-column-sidebar-left",
   defaultThemeColor: "#334155",
-  leftColumnSections: ["skills", "education", "languages", "certificates", "interests"],
-  rightColumnSections: ["summary", "work", "projects", "awards", "publications", "references", "custom"],
+  leftColumnSections: ["summary", "work", "projects", "references", "custom"],
+  rightColumnSections: [
+    "skills",
+    "education",
+    "certificates",
+    "publications",
+    "awards",
+    "languages",
+    "interests",
+  ],
 };
 
 const glowConfig: TemplateConfig = {
   id: "glow",
   name: "Glow",
-  layoutType: "two-column-sidebar-left",
-  defaultThemeColor: "#f59e0b",
-  leftColumnSections: ["skills", "education", "languages", "certificates", "interests"],
-  rightColumnSections: ["summary", "work", "projects", "awards", "publications", "references", "custom"],
+  layoutType: "single-column",
+  defaultThemeColor: "#F4D03F",
+  fullWidthHeader: true,
+  headerBackgroundColor: "#1F2937",
+  headerTextColor: "#FFFFFF",
+  themeOverrides: {
+    sectionHeadingStyle: 4, // Background highlight
+  },
 };
 
 const multicolumnConfig: TemplateConfig = {
@@ -114,7 +163,17 @@ const multicolumnConfig: TemplateConfig = {
   layoutType: "two-column-sidebar-left",
   defaultThemeColor: "#0284c7",
   leftColumnSections: ["skills", "languages", "interests"],
-  rightColumnSections: ["summary", "work", "projects", "education", "certificates", "awards", "publications", "references", "custom"],
+  rightColumnSections: [
+    "summary",
+    "work",
+    "projects",
+    "education",
+    "certificates",
+    "awards",
+    "publications",
+    "references",
+    "custom",
+  ],
 };
 
 const stylishConfig: TemplateConfig = {
@@ -122,8 +181,22 @@ const stylishConfig: TemplateConfig = {
   name: "Stylish",
   layoutType: "two-column-sidebar-left",
   defaultThemeColor: "#ec4899",
-  leftColumnSections: ["skills", "education", "languages", "certificates", "interests"],
-  rightColumnSections: ["summary", "work", "projects", "awards", "publications", "references", "custom"],
+  leftColumnSections: [
+    "skills",
+    "education",
+    "languages",
+    "certificates",
+    "interests",
+  ],
+  rightColumnSections: [
+    "summary",
+    "work",
+    "projects",
+    "awards",
+    "publications",
+    "references",
+    "custom",
+  ],
 };
 
 const timelineConfig: TemplateConfig = {
@@ -138,8 +211,22 @@ const polishedConfig: TemplateConfig = {
   name: "Polished",
   layoutType: "two-column-sidebar-left",
   defaultThemeColor: "#0d9488",
-  leftColumnSections: ["skills", "education", "languages", "certificates", "interests"],
-  rightColumnSections: ["summary", "work", "projects", "awards", "publications", "references", "custom"],
+  leftColumnSections: [
+    "skills",
+    "education",
+    "languages",
+    "certificates",
+    "interests",
+  ],
+  rightColumnSections: [
+    "summary",
+    "work",
+    "projects",
+    "awards",
+    "publications",
+    "references",
+    "custom",
+  ],
 };
 
 const developerConfig: TemplateConfig = {
@@ -154,8 +241,22 @@ const developer2Config: TemplateConfig = {
   name: "Developer 2",
   layoutType: "two-column-sidebar-left",
   defaultThemeColor: "#3b82f6",
-  leftColumnSections: ["skills", "education", "languages", "certificates", "interests"],
-  rightColumnSections: ["summary", "work", "projects", "awards", "publications", "references", "custom"],
+  leftColumnSections: [
+    "skills",
+    "education",
+    "languages",
+    "certificates",
+    "interests",
+  ],
+  rightColumnSections: [
+    "summary",
+    "work",
+    "projects",
+    "awards",
+    "publications",
+    "references",
+    "custom",
+  ],
 };
 
 // ============================================================================

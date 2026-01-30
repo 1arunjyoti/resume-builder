@@ -43,6 +43,8 @@ export interface ContactInfoProps {
   linkUnderline?: boolean;
   /** Line height for text */
   lineHeight?: number;
+  /** Override text color for all items */
+  color?: string;
 }
 
 // Default icons for contact types
@@ -69,11 +71,14 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({
   separator,
   linkUnderline = true,
   lineHeight = 1.2,
+  color,
 }) => {
   if (!items || items.length === 0) return null;
 
-  const linkColor = getColor("links", textColor);
-  const iconColor = getColor("icons", textColor);
+  // Use override color if provided, otherwise use textColor
+  const finalTextColor = color || textColor;
+  const linkColor = getColor("links", finalTextColor);
+  const iconColor = getColor("icons", finalTextColor);
 
   const styles = StyleSheet.create({
     container: {
@@ -107,13 +112,13 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({
     },
     bullet: {
       fontSize,
-      color: textColor,
+      color: finalTextColor,
       marginRight: 4,
       lineHeight,
     },
     separator: {
       fontSize,
-      color: textColor,
+      color: finalTextColor,
       marginHorizontal: 4,
       lineHeight,
     },
@@ -122,7 +127,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({
       fontFamily: bold ? fonts.bold : italic ? fonts.italic : fonts.base,
       fontWeight: bold ? "bold" : "normal",
       fontStyle: italic ? "italic" : "normal",
-      color: textColor,
+      color: finalTextColor,
       lineHeight,
     },
     link: {
