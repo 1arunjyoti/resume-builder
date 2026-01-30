@@ -74,7 +74,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
           : fonts.base,
       fontWeight: settings.certificatesNameBold ? "bold" : "normal",
       fontStyle: settings.certificatesNameItalic ? "italic" : "normal",
-      color: "#1a1a1a",
+      color: getColor("title", "#1a1a1a"),
     },
     date: {
       fontSize,
@@ -85,7 +85,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
           : fonts.base,
       fontWeight: settings.certificatesDateBold ? "bold" : "normal",
       fontStyle: settings.certificatesDateItalic ? "italic" : "normal",
-      color: "#666666",
+      color: getColor("meta", "#666666"),
     },
     issuer: {
       fontSize,
@@ -96,7 +96,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
           : fonts.base,
       fontWeight: settings.certificatesIssuerBold ? "bold" : "normal",
       fontStyle: settings.certificatesIssuerItalic ? "italic" : "normal",
-      color: "#555555",
+      color: getColor("subtext", "#555555"),
     },
 
     url: {
@@ -107,7 +107,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({
     },
     summary: {
       fontSize,
-      color: "#444444",
+      color: getColor("text", "#444444"),
       marginTop: 2,
       lineHeight,
     },

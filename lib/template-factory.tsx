@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Template Factory - Simplified template creation
  *
@@ -63,6 +64,7 @@ export type LayoutType =
   | "two-column-sidebar-left"
   | "two-column-sidebar-right"
   | "two-column-equal"
+  | "three-column"
   | "creative-sidebar";
 
 export interface TemplateConfig {
@@ -80,6 +82,8 @@ export interface TemplateConfig {
   defaultThemeColor?: string;
   /** Sections to render in left/sidebar column (for two-column layouts) */
   leftColumnSections?: string[];
+  /** Sections to render in middle column (for three-column layouts) */
+  middleColumnSections?: string[];
   /** Sections to render in right/main column (for two-column layouts) */
   rightColumnSections?: string[];
   /** Custom header component */
@@ -96,6 +100,12 @@ export interface TemplateConfig {
   headerBackgroundColor?: string;
   /** Text color associated with the full-width header context */
   headerTextColor?: string;
+  /** Right column background color (for creative-sidebar layout) */
+  rightColumnBackgroundColor?: string;
+  /** Right column text color (for creative-sidebar layout) */
+  rightColumnTextColor?: string;
+  /** Sidebar (Left column) text color */
+  sidebarTextColor?: string;
 }
 
 export interface HeaderProps {
@@ -248,7 +258,11 @@ const DefaultHeader: React.FC<HeaderProps & { showImage?: boolean }> = ({
       )}
       <ContactInfo
         items={basicsToContactItems(basics)}
-        style={settings.personalDetailsArrangement === 2 ? "stacked" : "bar"}
+        style={
+          settings.personalDetailsArrangement === 2
+            ? "stacked"
+            : (settings.personalDetailsContactStyle as any) || "bar"
+        }
         align={align}
         fontSize={settings.contactFontSize || fontSize}
         fonts={fonts}
@@ -475,7 +489,10 @@ export function createTemplate(config: TemplateConfig) {
 
     // Column widths
     const leftWidth = settings.leftColumnWidth || 30;
-    const rightWidth = 100 - leftWidth - 4; // 4% gap
+    const rightWidth =
+      config.layoutType === "three-column"
+        ? 100 - leftWidth - 50 // Fixed 50% middle column for now
+        : 100 - leftWidth - 4; // 4% gap for 2-column
 
     // Section order
     const order =
@@ -484,13 +501,26 @@ export function createTemplate(config: TemplateConfig) {
         : [...rightColumnSections, ...leftColumnSections];
 
     // Filter sections by column
+    // Filter sections by column
     const leftContent = order.filter((id) => leftColumnSections.includes(id));
+    const middleContent = order.filter((id) =>
+      (config.middleColumnSections || []).includes(id),
+    );
     const rightContent = order.filter((id) => rightColumnSections.includes(id));
 
     // Orphan sections go to right/main column
-    const knownSections = [...leftColumnSections, ...rightColumnSections];
+    const knownSections = [
+      ...leftColumnSections,
+      ...(config.middleColumnSections || []),
+      ...rightColumnSections,
+    ];
     const orphans = order.filter((id) => !knownSections.includes(id));
-    rightContent.push(...orphans);
+
+    if (config.layoutType === "three-column") {
+      middleContent.push(...orphans);
+    } else {
+      rightContent.push(...orphans);
+    }
 
     // Create styles
     const styles = StyleSheet.create({
@@ -533,8 +563,8 @@ export function createTemplate(config: TemplateConfig) {
               // Restore internal padding
               paddingTop: marginV,
               paddingHorizontal: marginH,
-              // Add bottom spacing inside the color block
-              paddingBottom: marginV,
+              // Use headerBottomMargin for spacing below header
+              paddingBottom: settings.headerBottomMargin || 12,
             }
           : {}),
       },
@@ -544,6 +574,9 @@ export function createTemplate(config: TemplateConfig) {
       },
       leftColumn: {
         width: `${leftWidth}%`,
+      },
+      middleColumn: {
+        width: "50%",
       },
       rightColumn: {
         width: `${rightWidth}%`,
@@ -557,17 +590,33 @@ export function createTemplate(config: TemplateConfig) {
         width: `${leftWidth}%`,
         backgroundColor: config.sidebarBackgroundColor || "#f4f4f0",
       },
+      rightColumnBackground: {
+        position: "absolute",
+        top: -30,
+        right: 0,
+        bottom: -30,
+        width: `${100 - leftWidth}%`,
+        backgroundColor: config.rightColumnBackgroundColor || "transparent",
+      },
       sidebar: {
         width: `${leftWidth}%`,
         paddingLeft: 0,
         paddingRight: 30, // Increased right padding to prevent clash
-        color: "#333",
+        color: config.sidebarTextColor || "#333",
       },
       main: {
         width: `${100 - leftWidth}%`,
         paddingHorizontal: 0,
-        backgroundColor: "#fff",
+        backgroundColor: config.rightColumnBackgroundColor
+          ? "transparent"
+          : "#fff",
         paddingLeft: 20,
+        paddingRight: config.rightColumnBackgroundColor ? 20 : 0,
+        // Add vertical padding if background is set
+        ...(config.rightColumnBackgroundColor
+          ? { paddingTop: 20, paddingBottom: 20 }
+          : {}),
+        color: config.rightColumnTextColor || "#333",
       },
       ...config.customStyles,
     });
@@ -576,7 +625,7 @@ export function createTemplate(config: TemplateConfig) {
     const HeaderComponent = config.headerComponent || DefaultHeader;
 
     // Section renderer helper
-    const renderSection = (sectionId: string) => (
+    const renderSection = (sectionId: string, colorFn?: GetColorFn) => (
       <SectionRenderer
         key={sectionId}
         sectionId={sectionId}
@@ -584,16 +633,18 @@ export function createTemplate(config: TemplateConfig) {
         settings={settings}
         fonts={fonts}
         fontSize={fontSize}
-        getColor={getColor}
+        getColor={colorFn || getColor}
         sectionMargin={sectionMargin}
       />
     );
 
     // Render based on layout type and settings
     const effectiveColumnCount = settings.columnCount || 1;
-    const isDynamicLayout =
-      config.layoutType === "single-column-centered" &&
-      effectiveColumnCount > 1;
+
+    // Create color function for right column if text color is specified
+    const rightColorFn: GetColorFn | undefined = config.rightColumnTextColor
+      ? () => config.rightColumnTextColor!
+      : undefined;
 
     switch (config.layoutType) {
       case "single-column":
@@ -615,14 +666,14 @@ export function createTemplate(config: TemplateConfig) {
 
               {/* Support dynamic column layout for templates like Classic */}
               {effectiveColumnCount === 1 ? (
-                <View>{order.map(renderSection)}</View>
+                <View>{order.map((id) => renderSection(id))}</View>
               ) : (
                 <View style={styles.columnsContainer}>
                   <View style={styles.leftColumn}>
-                    {leftContent.map(renderSection)}
+                    {leftContent.map((id) => renderSection(id))}
                   </View>
                   <View style={styles.rightColumn}>
-                    {rightContent.map(renderSection)}
+                    {rightContent.map((id) => renderSection(id))}
                   </View>
                 </View>
               )}
@@ -650,7 +701,7 @@ export function createTemplate(config: TemplateConfig) {
               </View>
 
               {settings.columnCount === 1 ? (
-                <View>{order.map(renderSection)}</View>
+                <View>{order.map((id) => renderSection(id))}</View>
               ) : (
                 <View style={styles.columnsContainer}>
                   <View
@@ -658,8 +709,8 @@ export function createTemplate(config: TemplateConfig) {
                       isLeftSidebar ? styles.leftColumn : styles.rightColumn
                     }
                   >
-                    {(isLeftSidebar ? leftContent : rightContent).map(
-                      renderSection,
+                    {(isLeftSidebar ? leftContent : rightContent).map((id) =>
+                      renderSection(id),
                     )}
                   </View>
                   <View
@@ -667,12 +718,43 @@ export function createTemplate(config: TemplateConfig) {
                       isLeftSidebar ? styles.rightColumn : styles.leftColumn
                     }
                   >
-                    {(isLeftSidebar ? rightContent : leftContent).map(
-                      renderSection,
+                    {(isLeftSidebar ? rightContent : leftContent).map((id) =>
+                      renderSection(id),
                     )}
                   </View>
                 </View>
               )}
+            </Page>
+          </Document>
+        );
+
+      case "three-column":
+        return (
+          <Document>
+            <Page size="A4" style={styles.page}>
+              <View style={styles.header}>
+                <HeaderComponent
+                  basics={basics}
+                  settings={settings}
+                  fonts={fonts}
+                  getColor={getColor}
+                  fontSize={fontSize}
+                  align={headerAlign}
+                  headerTextColor={config.headerTextColor}
+                />
+              </View>
+
+              <View style={styles.columnsContainer}>
+                <View style={styles.leftColumn}>
+                  {leftContent.map((id) => renderSection(id))}
+                </View>
+                <View style={styles.middleColumn}>
+                  {middleContent.map((id) => renderSection(id))}
+                </View>
+                <View style={styles.rightColumn}>
+                  {rightContent.map((id) => renderSection(id))}
+                </View>
+              </View>
             </Page>
           </Document>
         );
@@ -683,6 +765,9 @@ export function createTemplate(config: TemplateConfig) {
             <Page size="A4" style={styles.page}>
               {config.sidebarBackground && (
                 <View fixed style={styles.sidebarBackground} />
+              )}
+              {config.rightColumnBackgroundColor && (
+                <View fixed style={styles.rightColumnBackground} />
               )}
 
               <View style={styles.sidebar}>
@@ -706,10 +791,12 @@ export function createTemplate(config: TemplateConfig) {
                     align={headerAlign}
                   />
                 </View>
-                {leftContent.map(renderSection)}
+                {leftContent.map((id) => renderSection(id))}
               </View>
 
-              <View style={styles.main}>{rightContent.map(renderSection)}</View>
+              <View style={styles.main}>
+                {rightContent.map((id) => renderSection(id, rightColorFn))}
+              </View>
             </Page>
           </Document>
         );
@@ -728,7 +815,7 @@ export function createTemplate(config: TemplateConfig) {
                   align={headerAlign}
                 />
               </View>
-              <View>{order.map(renderSection)}</View>
+              <View>{order.map((id) => renderSection(id))}</View>
             </Page>
           </Document>
         );

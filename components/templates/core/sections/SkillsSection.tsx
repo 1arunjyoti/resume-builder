@@ -26,7 +26,7 @@ export interface SkillsSectionProps {
   sectionMargin?: number;
   containerStyle?: object;
   /** Override display style */
-  displayStyle?: "grid" | "level" | "compact" | "bubble";
+  displayStyle?: "grid" | "level" | "compact" | "bubble" | "boxed";
 }
 
 export const SkillsSection: React.FC<SkillsSectionProps> = ({
@@ -69,11 +69,11 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
       fontSize: fontSize + 1,
       fontFamily: fonts.bold,
       fontWeight: "bold",
-      color: "#1a1a1a",
+      color: getColor("title", "#1a1a1a"),
     },
     skillKeywords: {
       fontSize,
-      color: "#555555",
+      color: getColor("text", "#555555"),
       lineHeight,
     },
     // Level style
@@ -91,7 +91,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
     levelName: {
       fontSize,
       fontFamily: fonts.base,
-      color: "#333333",
+      color: getColor("title", "#333333"),
     },
     levelIndicator: {
       flexDirection: "row",
@@ -121,7 +121,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
     },
     compactItem: {
       fontSize,
-      color: "#444444",
+      color: getColor("text", "#444444"),
     },
     // Bubble/Tag style
     bubbleContainer: {
@@ -137,7 +137,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
     },
     bubbleText: {
       fontSize: fontSize - 1,
-      color: "#374151",
+      color: getColor("text", "#374151"),
     },
     bubbleCategory: {
       marginBottom: 8,
@@ -146,7 +146,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
       fontSize,
       fontFamily: fonts.bold,
       fontWeight: "bold",
-      color: "#1a1a1a",
+      color: getColor("title", "#1a1a1a"),
     },
     // List prefix styles
     listItemRow: {
@@ -155,7 +155,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
     },
     listPrefix: {
       fontSize,
-      color: "#666666",
+      color: getColor("subtext", "#666666"),
       marginRight: 6,
       minWidth: listStyle === "number" ? 18 : 12,
     },
@@ -254,7 +254,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
           style={{
             fontSize: fontSize - 1,
             fontWeight: "normal",
-            color: "#666666",
+            color: getColor("subtext", "#666666"),
             marginLeft: 4,
           }}
         >
@@ -387,6 +387,53 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({
                   {skill.keywords.map((keyword, i) => (
                     <View key={i} style={styles.bubble}>
                       <Text style={styles.bubbleText}>{keyword}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ))}
+          </View>
+        );
+
+      case "boxed":
+        return (
+          <View>
+            {skills.map((skill) => (
+              <View key={skill.id} style={styles.bubbleCategory}>
+                {skill.name && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <Text style={styles.bubbleCategoryName}>{skill.name}</Text>
+                    {skill.level && renderLevelIndicator(skill.level)}
+                  </View>
+                )}
+                <View style={[styles.bubbleContainer, { gap: 8 }]}>
+                  {skill.keywords.map((keyword, i) => (
+                    <View
+                      key={i}
+                      style={{
+                        borderWidth: 1,
+                        borderColor: themeColor,
+                        paddingHorizontal: 10,
+                        paddingVertical: 5,
+                        borderRadius: 2, // Boxy look
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: fontSize,
+                          color: getColor("text", "#374151"),
+                          fontFamily: fonts.bold,
+                        }}
+                      >
+                        {keyword}
+                      </Text>
                     </View>
                   ))}
                 </View>

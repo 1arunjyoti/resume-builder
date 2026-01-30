@@ -10,6 +10,9 @@ export interface ResumeBasics {
   url: string;
   summary: string;
   location: {
+    postalCode: string;
+    region: string;
+    address: string;
     city: string;
     country: string;
   };
@@ -21,6 +24,8 @@ export interface ResumeBasics {
 }
 
 export interface WorkExperience {
+  location: string;
+  name: string;
   id: string;
   company: string;
   position: string;
@@ -194,7 +199,7 @@ export interface LayoutSettings {
   profileImageShape: 'circle' | 'square';
   profileImageBorder: boolean;
   // Skills
-  skillsDisplayStyle: 'grid' | 'level' | 'compact' | 'bubble';
+  skillsDisplayStyle: 'grid' | 'level' | 'compact' | 'bubble' | 'boxed';
   skillsLevelStyle: 0 | 1 | 2 | 3 | 4;
   skillsListStyle: 'bullet' | 'dash' | 'inline' | 'blank' | 'number';
   // Languages

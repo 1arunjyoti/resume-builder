@@ -74,7 +74,7 @@ export const CustomSection: React.FC<CustomSectionProps> = ({
           : fonts.base,
       fontWeight: settings.customSectionNameBold ? "bold" : "normal",
       fontStyle: settings.customSectionNameItalic ? "italic" : "normal",
-      color: "#1a1a1a",
+      color: getColor("title", "#1a1a1a"),
     },
     date: {
       fontSize,
@@ -85,7 +85,7 @@ export const CustomSection: React.FC<CustomSectionProps> = ({
           : fonts.base,
       fontWeight: settings.customSectionDateBold ? "bold" : "normal",
       fontStyle: settings.customSectionDateItalic ? "italic" : "normal",
-      color: "#666666",
+      color: getColor("meta", "#666666"),
     },
     description: {
       fontSize,
@@ -96,7 +96,7 @@ export const CustomSection: React.FC<CustomSectionProps> = ({
           : fonts.base,
       fontWeight: settings.customSectionDescriptionBold ? "bold" : "normal",
       fontStyle: settings.customSectionDescriptionItalic ? "italic" : "normal",
-      color: "#555555",
+      color: getColor("text", "#555555"),
     },
 
     url: {
@@ -107,7 +107,7 @@ export const CustomSection: React.FC<CustomSectionProps> = ({
     },
     summary: {
       fontSize,
-      color: "#444444",
+      color: getColor("text", "#444444"),
       marginTop: 2,
       lineHeight,
     },

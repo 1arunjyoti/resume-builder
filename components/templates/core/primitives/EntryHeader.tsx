@@ -87,9 +87,9 @@ export const EntryHeader: React.FC<EntryHeaderProps> = ({
   urlItalic = false,
 }) => {
   const linkColor = getColor("links", "#1a1a1a");
-  const resolvedTitleColor = titleColor || "#1a1a1a";
-  const resolvedSubtitleColor = subtitleColor || "#444444";
-  const resolvedDateColor = dateColor || "#666666";
+  const resolvedTitleColor = titleColor || getColor("title", "#1a1a1a");
+  const resolvedSubtitleColor = subtitleColor || getColor("subtext", "#444444");
+  const resolvedDateColor = dateColor || getColor("meta", "#666666");
 
   const styles = StyleSheet.create({
     container: {
@@ -137,7 +137,7 @@ export const EntryHeader: React.FC<EntryHeaderProps> = ({
     location: {
       fontSize: fontSize - 1,
       fontFamily: fonts.base,
-      color: "#666666",
+      color: getColor("subtext", "#666666"),
     },
     date: {
       fontSize,
@@ -159,7 +159,7 @@ export const EntryHeader: React.FC<EntryHeaderProps> = ({
     },
     separator: {
       fontSize,
-      color: "#666666",
+      color: getColor("text", "#666666"),
       marginHorizontal: 4,
     },
   });

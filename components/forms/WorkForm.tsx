@@ -26,6 +26,8 @@ export function WorkForm({ data, onChange }: WorkFormProps) {
       endDate: "",
       summary: "",
       highlights: [],
+      location: "",
+      name: "",
     };
     onChange([...data, newExp]);
   }, [data, onChange]);

@@ -64,7 +64,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
     },
     detailText: {
       fontSize,
-      color: "#555555",
+      color: getColor("subtext", "#555555"),
     },
     scoreText: {
       fontSize,
@@ -75,7 +75,7 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
           : fonts.base,
       fontWeight: settings.educationGpaBold ? "bold" : "normal",
       fontStyle: settings.educationGpaItalic ? "italic" : "normal",
-      color: "#555555",
+      color: getColor("meta", "#555555"),
     },
     link: {
       fontSize: fontSize - 1,
@@ -88,12 +88,12 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
     coursesLabel: {
       fontSize,
       fontWeight: "bold",
-      color: "#444444",
+      color: getColor("text", "#444444"),
       marginBottom: 2,
     },
     summaryText: {
       fontSize,
-      color: "#444444",
+      color: getColor("text", "#444444"),
       marginTop: 2,
       lineHeight,
     },
@@ -136,57 +136,221 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
         return (
           <View key={edu.id} style={styles.entryBlock}>
             {/* Entry Header */}
-            <EntryHeader
-              title={edu.institution}
-              subtitle={degreeStr}
-              dateRange={dateRange}
-              url={edu.url}
-              layoutStyle={settings.entryLayoutStyle as EntryLayoutStyle}
-              fontSize={fontSize}
-              fonts={fonts}
-              getColor={getColor}
-              titleBold={settings.educationInstitutionBold}
-              titleItalic={settings.educationInstitutionItalic}
-              subtitleBold={settings.educationDegreeBold}
-              subtitleItalic={settings.educationDegreeItalic}
-              dateBold={settings.educationDateBold}
-              dateItalic={settings.educationDateItalic}
-              listStyle={institutionListStyle}
-              index={index}
-              showUrl={
-                Boolean(edu.url) &&
-                (settings.linkShowIcon || settings.linkShowFullUrl)
-              }
-              showLinkIcon={settings.linkShowIcon}
-              showFullUrl={settings.linkShowFullUrl}
-              urlBold={settings.educationInstitutionBold} // Education doesn't have a separate URL bold setting, usually grouped with institution or uses a specific one? Checking defaults.. Education usually lacks specific URL bold setting in defaults. But I should check if I missed it.
-              // Wait, Education doesn't have `educationUrlBold` in settings usually. It uses `educationInstitutionBold` for the title.
-              // Let's check `LayoutSettings` definition again.
-              // Actually, looking at `db/index.ts` earlier, Education has degree, area, date, gpa, courses. No specific URL setting?
-              // If it's the specific URL setting the user is asking about, it might be relevant for sections that HAVE it.
-              // For Education, it might fall back to standard link style or inherit.
-              // If the user said "you removed the url bold, italic function", they likely refer to sections where they HAD detailed control.
-              // Let's look at `db/index.ts` again if needed.
-              // But for now, let's assume Education might not have it.
-              // However, I should check `WorkSection` used `experienceWebsiteBold`.
-              // `ProjectsSection` used `projectsUrlBold`.
-              // `Certificates` has `certificatesUrlBold`.
-              // `Publications` has `publicationsUrlBold`.
-              // `Custom` has `customSectionUrlBold`.
-              // `Education` does NOT seem to have `educationUrlBold` in the viewed file `db/index.ts` lines 230-243.
-              // So for Education, maybe I shouldn't add it or it wasn't there before.
-              // I will skip adding it to Education for now unless I find a matching setting.
-              // Wait, I am currently editing `ProjectsSection` and `EducationSection`.
-              // Let's hold off on EducationSection if I'm unsure.
-              // I will just update ProjectsSection in this tool call.
-              // Actually I cannot "skip" a file in `multi_replace` or `replace` if I already started.
-              // But I am making individual calls.
-              // So I will just update ProjectsSection here.
-              // Setting `urlBold` to undefined simply defaults to normal, which is fine.
-            />
+            {/* Entry Header */}
+            {settings.entryLayoutStyle === 3 ? (
+              // Timeline Layout
+              <View
+                style={{
+                  flexDirection: "row",
+                  marginBottom: 4,
+                }}
+              >
+                {/* Left Column: Dates */}
+                <View style={{ width: 85, paddingRight: 8 }}>
+                  <Text
+                    style={{
+                      fontSize: fontSize,
+                      fontFamily: settings.educationDateBold
+                        ? fonts.bold
+                        : fonts.base,
+                      fontWeight: settings.educationDateBold
+                        ? "bold"
+                        : "normal",
+                      color: getColor("text", "#444444"),
+                      textAlign: "right",
+                    }}
+                  >
+                    {dateRange ? dateRange.split("–")[0].trim() : ""}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: fontSize,
+                      fontFamily: settings.educationDateBold
+                        ? fonts.bold
+                        : fonts.base,
+                      fontWeight: settings.educationDateBold
+                        ? "bold"
+                        : "normal",
+                      color: getColor("text", "#444444"),
+                      textAlign: "right",
+                    }}
+                  >
+                    {dateRange && dateRange.includes("–")
+                      ? " - " + dateRange.split("–")[1].trim()
+                      : ""}
+                  </Text>
+                  {edu.score && (
+                    <Text
+                      style={{
+                        fontSize: fontSize - 1,
+                        color: getColor("meta", "#555555"),
+                        textAlign: "right",
+                        marginTop: 2,
+                      }}
+                    >
+                      {edu.score.includes(":") ||
+                      edu.score.toLowerCase().includes("gpa")
+                        ? edu.score
+                        : `GPA: ${edu.score}`}
+                    </Text>
+                  )}
+                </View>
 
-            {/* Score/GPA */}
-            {edu.score && (
+                {/* Middle Column: Line and Dot */}
+                <View
+                  style={{
+                    width: 12,
+                    alignItems: "center",
+                    position: "relative",
+                  }}
+                >
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 4,
+                      left: 4,
+                      width: 4,
+                      height: 4,
+                      borderRadius: 2,
+                      backgroundColor: getColor("decorations", "#000"),
+                      zIndex: 10,
+                    }}
+                  />
+                  {(index < education.length - 1 || true) && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: 4,
+                        bottom: -16,
+                        width: 1,
+                        backgroundColor: "#e5e7eb",
+                        left: 5.5,
+                      }}
+                    />
+                  )}
+                </View>
+
+                {/* Right Column: Content */}
+                <View style={{ flex: 1, paddingLeft: 8 }}>
+                  <Text
+                    style={{
+                      fontSize:
+                        settings.entryTitleSize === "L"
+                          ? fontSize + 2
+                          : fontSize + 1,
+                      fontFamily: settings.educationDegreeBold
+                        ? fonts.bold
+                        : fonts.base,
+                      fontWeight: settings.educationDegreeBold
+                        ? "bold"
+                        : "normal",
+                      color: getColor("primary", "#000"),
+                    }}
+                  >
+                    {degreeStr}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: fontSize,
+                      color: getColor("title", "#333"),
+                      fontFamily: fonts.bold,
+                      marginTop: 1,
+                      marginBottom: 2,
+                    }}
+                  >
+                    {edu.institution}
+                  </Text>
+
+                  {/* Summary */}
+                  {edu.summary && (
+                    <RichText
+                      text={edu.summary}
+                      fontSize={fontSize}
+                      fonts={fonts}
+                      lineHeight={lineHeight}
+                      linkColor={getColor("links", "#444444")}
+                      showLinkIcon={settings.linkShowIcon}
+                      showFullUrl={settings.linkShowFullUrl}
+                      style={styles.summaryText}
+                    />
+                  )}
+
+                  {/* Courses */}
+                  {edu.courses && edu.courses.length > 0 && (
+                    <View style={styles.coursesWrapper}>
+                      <Text style={styles.coursesLabel}>
+                        Relevant Coursework:
+                      </Text>
+                      <BulletList
+                        items={edu.courses}
+                        style="inline"
+                        fontSize={fontSize}
+                        fonts={fonts}
+                        bold={settings.educationCoursesBold}
+                        italic={settings.educationCoursesItalic}
+                        textColor={getColor("text", "#555555")}
+                        getColor={getColor}
+                        linkColor={getColor("links")}
+                        showLinkIcon={settings.linkShowIcon}
+                        showFullUrl={settings.linkShowFullUrl}
+                      />
+                    </View>
+                  )}
+                </View>
+              </View>
+            ) : (
+              <EntryHeader
+                title={edu.institution}
+                subtitle={degreeStr}
+                dateRange={dateRange}
+                url={edu.url}
+                layoutStyle={settings.entryLayoutStyle as EntryLayoutStyle}
+                fontSize={fontSize}
+                fonts={fonts}
+                getColor={getColor}
+                titleBold={settings.educationInstitutionBold}
+                titleItalic={settings.educationInstitutionItalic}
+                subtitleBold={settings.educationDegreeBold}
+                subtitleItalic={settings.educationDegreeItalic}
+                dateBold={settings.educationDateBold}
+                dateItalic={settings.educationDateItalic}
+                listStyle={institutionListStyle}
+                index={index}
+                showUrl={
+                  Boolean(edu.url) &&
+                  (settings.linkShowIcon || settings.linkShowFullUrl)
+                }
+                showLinkIcon={settings.linkShowIcon}
+                showFullUrl={settings.linkShowFullUrl}
+                urlBold={settings.educationInstitutionBold} // Education doesn't have a separate URL bold setting, usually grouped with institution or uses a specific one? Checking defaults.. Education usually lacks specific URL bold setting in defaults. But I should check if I missed it.
+                // Wait, Education doesn't have `educationUrlBold` in settings usually. It uses `educationInstitutionBold` for the title.
+                // Let's check `LayoutSettings` definition again.
+                // Actually, looking at `db/index.ts` earlier, Education has degree, area, date, gpa, courses. No specific URL setting?
+                // If it's the specific URL setting the user is asking about, it might be relevant for sections that HAVE it.
+                // For Education, it might fall back to standard link style or inherit.
+                // If the user said "you removed the url bold, italic function", they likely refer to sections where they HAD detailed control.
+                // Let's look at `db/index.ts` again if needed.
+                // But for now, let's assume Education might not have it.
+                // However, I should check `WorkSection` used `experienceWebsiteBold`.
+                // `ProjectsSection` used `projectsUrlBold`.
+                // `Certificates` has `certificatesUrlBold`.
+                // `Publications` has `publicationsUrlBold`.
+                // `Custom` has `customSectionUrlBold`.
+                // `Education` does NOT seem to have `educationUrlBold` in the viewed file `db/index.ts` lines 230-243.
+                // So for Education, maybe I shouldn't add it or it wasn't there before.
+                // I will skip adding it to Education for now unless I find a matching setting.
+                // Wait, I am currently editing `ProjectsSection` and `EducationSection`.
+                // Let's hold off on EducationSection if I'm unsure.
+                // I will just update ProjectsSection in this tool call.
+                // Actually I cannot "skip" a file in `multi_replace` or `replace` if I already started.
+                // But I am making individual calls.
+                // So I will just update ProjectsSection here.
+                // Setting `urlBold` to undefined simply defaults to normal, which is fine.
+              />
+            )}
+
+            {/* Score/GPA (Render here if NOT timeline layout) */}
+            {edu.score && settings.entryLayoutStyle !== 3 && (
               <Text style={styles.scoreText}>
                 {edu.score.includes(":") ||
                 edu.score.toLowerCase().includes("gpa")
@@ -207,8 +371,8 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
                 </Link>
               )}
 
-            {/* Summary */}
-            {edu.summary && (
+            {/* Summary (Render here if NOT timeline layout) */}
+            {edu.summary && settings.entryLayoutStyle !== 3 && (
               <RichText
                 text={edu.summary}
                 fontSize={fontSize}
@@ -221,25 +385,27 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
               />
             )}
 
-            {/* Courses */}
-            {edu.courses && edu.courses.length > 0 && (
-              <View style={styles.coursesWrapper}>
-                <Text style={styles.coursesLabel}>Relevant Coursework:</Text>
-                <BulletList
-                  items={edu.courses}
-                  style="inline"
-                  fontSize={fontSize}
-                  fonts={fonts}
-                  bold={settings.educationCoursesBold}
-                  italic={settings.educationCoursesItalic}
-                  textColor="#555555"
-                  getColor={getColor}
-                  linkColor={getColor("links")}
-                  showLinkIcon={settings.linkShowIcon}
-                  showFullUrl={settings.linkShowFullUrl}
-                />
-              </View>
-            )}
+            {/* Courses (Render here if NOT timeline layout) */}
+            {edu.courses &&
+              edu.courses.length > 0 &&
+              settings.entryLayoutStyle !== 3 && (
+                <View style={styles.coursesWrapper}>
+                  <Text style={styles.coursesLabel}>Relevant Coursework:</Text>
+                  <BulletList
+                    items={edu.courses}
+                    style="inline"
+                    fontSize={fontSize}
+                    fonts={fonts}
+                    bold={settings.educationCoursesBold}
+                    italic={settings.educationCoursesItalic}
+                    textColor={getColor("text", "#555555")}
+                    getColor={getColor}
+                    linkColor={getColor("links")}
+                    showLinkIcon={settings.linkShowIcon}
+                    showFullUrl={settings.linkShowFullUrl}
+                  />
+                </View>
+              )}
           </View>
         );
       })}

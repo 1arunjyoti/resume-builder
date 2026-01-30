@@ -68,7 +68,7 @@ export const InterestsSection: React.FC<InterestsSectionProps> = ({
           : fonts.base,
       fontWeight: settings.interestsNameBold ? "bold" : "normal",
       fontStyle: settings.interestsNameItalic ? "italic" : "normal",
-      color: "#333333",
+      color: getColor("title", "#333333"),
     },
     keywords: {
       fontSize,
@@ -79,7 +79,7 @@ export const InterestsSection: React.FC<InterestsSectionProps> = ({
           : fonts.base,
       fontWeight: settings.interestsKeywordsBold ? "bold" : "normal",
       fontStyle: settings.interestsKeywordsItalic ? "italic" : "normal",
-      color: "#666666",
+      color: getColor("text", "#666666"),
     },
     // Bubble style
     bubbleContainer: {
@@ -95,7 +95,7 @@ export const InterestsSection: React.FC<InterestsSectionProps> = ({
     },
     bubbleText: {
       fontSize: fontSize - 1,
-      color: "#374151",
+      color: getColor("text", "#374151"),
     },
   });
 

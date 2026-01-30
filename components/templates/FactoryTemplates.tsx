@@ -13,6 +13,7 @@
  */
 
 import { createTemplate, type TemplateConfig } from "@/lib/template-factory";
+import { StylishHeader } from "./headers/StylishHeader";
 
 // ============================================================================
 // TEMPLATE CONFIGURATIONS
@@ -160,71 +161,117 @@ const glowConfig: TemplateConfig = {
 const multicolumnConfig: TemplateConfig = {
   id: "multicolumn",
   name: "Multicolumn",
-  layoutType: "two-column-sidebar-left",
-  defaultThemeColor: "#0284c7",
+  layoutType: "three-column",
+  fullWidthHeader: true, // Ensure header is full width
+  defaultThemeColor: "#000000",
   leftColumnSections: ["skills", "languages", "interests"],
+  middleColumnSections: ["summary", "work", "projects", "custom"], // New Middle
   rightColumnSections: [
-    "summary",
-    "work",
-    "projects",
     "education",
     "certificates",
     "awards",
     "publications",
     "references",
-    "custom",
   ],
 };
 
 const stylishConfig: TemplateConfig = {
   id: "stylish",
   name: "Stylish",
-  layoutType: "two-column-sidebar-left",
-  defaultThemeColor: "#ec4899",
+  layoutType: "two-column-sidebar-left", // Main on left (65%), Sidebar on right (35%)
+  defaultThemeColor: "#2563eb", // Blue to match wave gradient
   leftColumnSections: [
-    "skills",
+    // Main content (65%)
+    "work",
     "education",
+    "projects",
+    "skills",
     "languages",
     "certificates",
-    "interests",
   ],
   rightColumnSections: [
+    // Sidebar content (35%)
     "summary",
-    "work",
-    "projects",
+    "interests",
     "awards",
     "publications",
     "references",
     "custom",
   ],
+  headerComponent: StylishHeader,
 };
 
 const timelineConfig: TemplateConfig = {
   id: "timeline",
   name: "Timeline",
   layoutType: "single-column",
-  defaultThemeColor: "#6366f1",
+  defaultThemeColor: "#3b82f6", // Blue to match legacy
+  themeOverrides: {
+    // Header
+    headerPosition: "left",
+    nameFontSize: 32,
+    nameBold: true,
+    titleFontSize: 14,
+    titleBold: true,
+    titleItalic: false,
+    headerBottomMargin: 12,
+    personalDetailsContactStyle: "bar",
+    personalDetailsArrangement: 1, // Row
+
+    // Headings
+    sectionHeadingStyle: 8, // Plain/Minimal
+    sectionHeadingCapitalization: "uppercase",
+    sectionHeadingBold: true,
+    sectionHeadingSize: "L",
+    sectionMargin: 16,
+
+    // Timeline Layout
+    entryLayoutStyle: 3, // Timeline
+
+    // Skills
+    skillsDisplayStyle: "boxed",
+
+    // Section Order (Matching image)
+    sectionOrder: [
+      "summary",
+      "work",
+      "education",
+      "skills",
+      "projects",
+      "certificates",
+      "languages",
+      "interests",
+      "publications",
+      "references",
+      "custom",
+    ],
+  },
 };
 
 const polishedConfig: TemplateConfig = {
   id: "polished",
   name: "Polished",
-  layoutType: "two-column-sidebar-left",
-  defaultThemeColor: "#0d9488",
+  layoutType: "creative-sidebar", // Uses sidebar layout logic (Header in large Left column)
+  defaultThemeColor: "#0B5B75", // Petrol Blue
+  sidebarBackground: false, // Disable left background
+  rightColumnBackgroundColor: "#0e7490", // Enable right background
+  rightColumnTextColor: "#ffffff", // White text on right background
   leftColumnSections: [
-    "skills",
-    "education",
-    "languages",
-    "certificates",
-    "interests",
-  ],
-  rightColumnSections: [
+    // Main content (65%)
     "summary",
     "work",
     "projects",
-    "awards",
     "publications",
     "references",
+  ],
+  rightColumnSections: [
+    // Sidebar content (35% - colored background)
+    "skills",
+    "education",
+    "interests",
+    "languages",
+    "awards",
+    "certificates",
     "custom",
   ],
 };
@@ -232,28 +279,50 @@ const polishedConfig: TemplateConfig = {
 const developerConfig: TemplateConfig = {
   id: "developer",
   name: "Developer",
-  layoutType: "single-column",
-  defaultThemeColor: "#22c55e",
+  layoutType: "two-column-sidebar-right", // Main on left (60%), Sidebar on right (40%)
+  defaultThemeColor: "#38b6ff", // Blue to match legacy
+  leftColumnSections: [
+    // Main content (60%)
+    "work",
+    "projects",
+  ],
+  rightColumnSections: [
+    // Sidebar content (40%)
+    "summary",
+    "skills",
+    "education",
+    "certificates",
+    "languages",
+    "interests",
+    "awards",
+    "publications",
+    "references",
+    "custom",
+  ],
 };
 
 const developer2Config: TemplateConfig = {
   id: "developer2",
   name: "Developer 2",
-  layoutType: "two-column-sidebar-left",
-  defaultThemeColor: "#3b82f6",
+  layoutType: "creative-sidebar", // Sidebar on left with decorative elements
+  defaultThemeColor: "#74C365", // Mantis Green to match legacy
+  sidebarBackground: true,
+  sidebarBackgroundColor: "#1C1C1C", // Dark grey sidebar
   leftColumnSections: [
-    "skills",
-    "education",
-    "languages",
-    "certificates",
-    "interests",
+    // Sidebar content (35% - dark background)
+    "summary",
   ],
   rightColumnSections: [
-    "summary",
-    "work",
+    // Main content (65% - numbered sections)
+    "education",
+    "skills",
     "projects",
+    "certificates",
+    "interests",
+    "work",
     "awards",
     "publications",
+    "languages",
     "references",
     "custom",
   ],

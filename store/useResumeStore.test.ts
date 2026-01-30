@@ -193,6 +193,9 @@ describe('Resume Store', () => {
           certificatesDateItalic: false,
           certificatesUrlBold: false,
           certificatesUrlItalic: false,
+          contactLinkUnderline: false,
+          linkShowIcon: false,
+          linkShowFullUrl: false
         },
       },
       basics: {
@@ -202,7 +205,12 @@ describe('Resume Store', () => {
         phone: '',
         url: '',
         summary: '',
-        location: { city: '', country: '' },
+        location: {
+          city: '', country: '',
+          postalCode: '',
+          region: '',
+          address: ''
+        },
         profiles: [],
       },
       work: [],

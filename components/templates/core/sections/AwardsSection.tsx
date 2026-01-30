@@ -73,7 +73,7 @@ export const AwardsSection: React.FC<AwardsSectionProps> = ({
           : fonts.base,
       fontWeight: settings.awardsTitleBold ? "bold" : "normal",
       fontStyle: settings.awardsTitleItalic ? "italic" : "normal",
-      color: "#1a1a1a",
+      color: getColor("title", "#1a1a1a"),
     },
     date: {
       fontSize,
@@ -84,7 +84,7 @@ export const AwardsSection: React.FC<AwardsSectionProps> = ({
           : fonts.base,
       fontWeight: settings.awardsDateBold ? "bold" : "normal",
       fontStyle: settings.awardsDateItalic ? "italic" : "normal",
-      color: "#666666",
+      color: getColor("meta", "#666666"),
     },
     awarder: {
       fontSize,
@@ -95,11 +95,11 @@ export const AwardsSection: React.FC<AwardsSectionProps> = ({
           : fonts.base,
       fontWeight: settings.awardsAwarderBold ? "bold" : "normal",
       fontStyle: settings.awardsAwarderItalic ? "italic" : "normal",
-      color: "#555555",
+      color: getColor("subtext", "#555555"),
     },
     summary: {
       fontSize,
-      color: "#444444",
+      color: getColor("text", "#444444"),
       marginTop: 2,
       lineHeight,
     },

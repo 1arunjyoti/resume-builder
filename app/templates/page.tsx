@@ -108,7 +108,7 @@ export default function TemplatesPage() {
         "Clean 3-column layout. Perfect for highlighting skills and education alongside experience.",
       category: ["Modern", "Professional"],
       gradient: "bg-linear-to-br from-blue-50 to-sky-100",
-      image: "/images/developer_template.jpg",
+      image: "/images/multicolumn_template.jpg",
       features: ["Three Column Layout", "Clean Hierarchy", "Customizable"],
     },
     {

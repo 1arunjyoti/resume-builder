@@ -74,7 +74,7 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
           : fonts.base,
       fontWeight: settings.languagesNameBold ? "bold" : "normal",
       fontStyle: settings.languagesNameItalic ? "italic" : "normal",
-      color: "#333333",
+      color: getColor("title", "#333333"),
     },
     fluency: {
       fontSize,
@@ -85,11 +85,11 @@ export const LanguagesSection: React.FC<LanguagesSectionProps> = ({
           : fonts.base,
       fontWeight: settings.languagesFluencyBold ? "bold" : "normal",
       fontStyle: settings.languagesFluencyItalic ? "italic" : "normal",
-      color: "#666666",
+      color: getColor("text", "#666666"),
     },
     separator: {
       fontSize,
-      color: "#666666",
+      color: getColor("text", "#666666"),
       marginHorizontal: 4,
     },
     // Inline style

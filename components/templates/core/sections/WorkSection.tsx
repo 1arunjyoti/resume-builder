@@ -12,7 +12,7 @@
  */
 
 import React from "react";
-import { View, StyleSheet } from "@react-pdf/renderer";
+import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import type { WorkExperience, LayoutSettings } from "@/db";
 import { formatDate } from "@/lib/template-utils";
 import {
@@ -111,37 +111,188 @@ export const WorkSection: React.FC<WorkSectionProps> = ({
         return (
           <View key={exp.id} style={styles.entryBlock}>
             {/* Entry Header */}
-            <EntryHeader
-              title={exp.company}
-              subtitle={exp.position}
-              dateRange={dateRange}
-              url={exp.url}
-              layoutStyle={settings.entryLayoutStyle as EntryLayoutStyle}
-              fontSize={fontSize}
-              fonts={fonts}
-              getColor={getColor}
-              titleBold={settings.experienceCompanyBold}
-              titleItalic={settings.experienceCompanyItalic}
-              subtitleBold={settings.experiencePositionBold}
-              subtitleItalic={settings.experiencePositionItalic}
-              dateBold={settings.experienceDateBold}
-              dateItalic={settings.experienceDateItalic}
-              listStyle={companyListStyle}
-              index={index}
-              showUrl={
-                (Boolean(exp.url) &&
-                  settings.experienceWebsiteBold !== undefined) ||
-                (Boolean(exp.url) &&
-                  (settings.linkShowIcon || settings.linkShowFullUrl))
-              }
-              showLinkIcon={settings.linkShowIcon}
-              showFullUrl={settings.linkShowFullUrl}
-              urlBold={settings.experienceWebsiteBold}
-              urlItalic={settings.experienceWebsiteItalic}
-            />
+            {/* Entry Header */}
+            {settings.entryLayoutStyle === 3 ? (
+              // Timeline Layout
+              <View
+                style={{
+                  flexDirection: "row",
+                  marginBottom: 4,
+                }}
+              >
+                {/* Left Column: Dates */}
+                <View style={{ width: 85, paddingRight: 8 }}>
+                  <Text
+                    style={{
+                      fontSize: fontSize,
+                      fontFamily: settings.experienceDateBold
+                        ? fonts.bold
+                        : fonts.base,
+                      fontWeight: settings.experienceDateBold
+                        ? "bold"
+                        : "normal",
+                      color: getColor("text", "#444444"),
+                      textAlign: "right",
+                    }}
+                  >
+                    {dateRange ? dateRange.split("–")[0].trim() : ""}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: fontSize,
+                      fontFamily: settings.experienceDateBold
+                        ? fonts.bold
+                        : fonts.base,
+                      fontWeight: settings.experienceDateBold
+                        ? "bold"
+                        : "normal",
+                      color: getColor("text", "#444444"),
+                      textAlign: "right",
+                    }}
+                  >
+                    {dateRange && dateRange.includes("–")
+                      ? " - " + dateRange.split("–")[1].trim()
+                      : ""}
+                  </Text>
+                </View>
 
-            {/* Summary */}
-            {exp.summary && (
+                {/* Middle Column: Line and Dot */}
+                <View
+                  style={{
+                    width: 12,
+                    alignItems: "center",
+                    position: "relative",
+                  }}
+                >
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 4,
+                      left: 4, // Center of width 12
+                      width: 4,
+                      height: 4,
+                      borderRadius: 2,
+                      backgroundColor: getColor("decorations", "#000"),
+                      zIndex: 10,
+                    }}
+                  />
+                  {(index < work.length - 1 || true) && ( // Always show line for now, maybe handle last item if needed
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: 4,
+                        bottom: -16, // Extend to next item
+                        width: 1,
+                        backgroundColor: "#e5e7eb",
+                        left: 5.5,
+                      }}
+                    />
+                  )}
+                </View>
+
+                {/* Right Column: Content */}
+                <View style={{ flex: 1, paddingLeft: 8 }}>
+                  <Text
+                    style={{
+                      fontSize:
+                        settings.entryTitleSize === "L"
+                          ? fontSize + 2
+                          : fontSize + 1,
+                      fontFamily: settings.experienceCompanyBold
+                        ? fonts.bold
+                        : fonts.base,
+                      fontWeight: settings.experienceCompanyBold
+                        ? "bold"
+                        : "normal",
+                      color: getColor("primary", "#000"), // Section primary color
+                    }}
+                  >
+                    {exp.position}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: fontSize,
+                      color: getColor("title", "#333"),
+                      fontFamily: fonts.bold,
+                      marginTop: 1,
+                      marginBottom: 2,
+                    }}
+                  >
+                    {exp.company}
+                  </Text>
+
+                  {exp.summary && (
+                    <RichText
+                      text={exp.summary}
+                      fontSize={fontSize}
+                      fonts={fonts}
+                      lineHeight={lineHeight}
+                      linkColor={getColor("links")}
+                      showLinkIcon={settings.linkShowIcon}
+                      showFullUrl={settings.linkShowFullUrl}
+                      style={styles.summaryText}
+                    />
+                  )}
+
+                  {exp.highlights &&
+                    exp.highlights.length > 0 &&
+                    settings.useBullets !== false && (
+                      <View
+                        style={[styles.highlightsWrapper, { marginTop: 4 }]}
+                      >
+                        <BulletList
+                          items={exp.highlights}
+                          style={achievementsListStyle}
+                          fontSize={fontSize}
+                          fonts={fonts}
+                          lineHeight={lineHeight}
+                          bulletMargin={settings.bulletMargin}
+                          bulletColor={getColor("decorations", "#333")}
+                          textColor="#444444"
+                          getColor={getColor}
+                          linkColor={getColor("links")}
+                          showLinkIcon={settings.linkShowIcon}
+                          showFullUrl={settings.linkShowFullUrl}
+                          bold={settings.experienceAchievementsBold}
+                          italic={settings.experienceAchievementsItalic}
+                        />
+                      </View>
+                    )}
+                </View>
+              </View>
+            ) : (
+              <EntryHeader
+                title={exp.company}
+                subtitle={exp.position}
+                dateRange={dateRange}
+                url={exp.url}
+                layoutStyle={settings.entryLayoutStyle as EntryLayoutStyle}
+                fontSize={fontSize}
+                fonts={fonts}
+                getColor={getColor}
+                titleBold={settings.experienceCompanyBold}
+                titleItalic={settings.experienceCompanyItalic}
+                subtitleBold={settings.experiencePositionBold}
+                subtitleItalic={settings.experiencePositionItalic}
+                dateBold={settings.experienceDateBold}
+                dateItalic={settings.experienceDateItalic}
+                listStyle={companyListStyle}
+                index={index}
+                showUrl={
+                  (Boolean(exp.url) &&
+                    settings.experienceWebsiteBold !== undefined) ||
+                  (Boolean(exp.url) &&
+                    (settings.linkShowIcon || settings.linkShowFullUrl))
+                }
+                showLinkIcon={settings.linkShowIcon}
+                showFullUrl={settings.linkShowFullUrl}
+                urlBold={settings.experienceWebsiteBold}
+                urlItalic={settings.experienceWebsiteItalic}
+              />
+            )}
+
+            {/* Summary (Only render here if NOT timeline layout) */}
+            {exp.summary && settings.entryLayoutStyle !== 3 && (
               <RichText
                 text={exp.summary}
                 fontSize={fontSize}
@@ -154,10 +305,11 @@ export const WorkSection: React.FC<WorkSectionProps> = ({
               />
             )}
 
-            {/* Highlights/Achievements */}
+            {/* Highlights/Achievements (Only render here if NOT timeline layout) */}
             {exp.highlights &&
               exp.highlights.length > 0 &&
-              settings.useBullets !== false && (
+              settings.useBullets !== false &&
+              settings.entryLayoutStyle !== 3 && (
                 <View style={styles.highlightsWrapper}>
                   <BulletList
                     items={exp.highlights}

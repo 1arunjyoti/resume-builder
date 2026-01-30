@@ -19,7 +19,7 @@ const mockResume = (overrides: Partial<Resume> = {}): Resume => ({
     phone: '123-456-7890',
     url: '',
     summary: 'Experienced developer with a proven track record. Hard worker who thinks outside the box.', // Contains cliches
-    location: { city: 'New York', country: 'USA' },
+    location: { address: '', city: 'New York', region: '', postalCode: '', country: 'USA' },
     profiles: [],
   },
   work: [
@@ -35,7 +35,9 @@ const mockResume = (overrides: Partial<Resume> = {}): Resume => ({
         'Spearheaded the initiative.', // Strong
         'Responsible for managing the team.' // Weak start
       ],
-      url: ''
+      url: '',
+      location: '',
+      name: ''
     }
   ] as any[],
   education: [],
@@ -85,7 +87,9 @@ describe('calculateATSScore', () => {
             'Increased revenue by 20%.',
             'Managed budget of $50000.',
             'Led a team of 10 people.'
-          ]
+          ],
+          location: '',
+          name: ''
         }
       ]
     });

@@ -354,6 +354,17 @@ export const ENTRY_PRESETS = {
     entryIndentBody: false,
     entryListStyle: "bullet" as const,
   },
+
+  /** Timeline layout with left column date */
+  timeline: {
+    entryLayoutStyle: 3 as const,
+    entryColumnWidth: "auto" as const,
+    entryTitleSize: "L" as const,
+    entrySubtitleStyle: "normal" as const,
+    entrySubtitlePlacement: "nextLine" as const,
+    entryIndentBody: false,
+    entryListStyle: "bullet" as const,
+  },
 } as const;
 
 // ============================================================================
@@ -709,10 +720,20 @@ export const TEMPLATE_THEMES: Record<string, ThemeConfig> = {
     typography: "professional",
     headings: "filled",
     layout: "threeColumn",
-    entries: "modern",
+    entries: "compact", // Changed from 'modern' for tighter entries
     contact: "iconDash",
     overrides: {
-      showProfileImage: true,
+      // Compact sizing
+      fontSize: 8,
+      lineHeight: 1.15,
+      sectionMargin: 6,
+      bulletMargin: 1,
+      headerBottomMargin: 4,
+      leftColumnWidth: 22, // Narrower left column
+      // Styling
+      showProfileImage: false, // Remove image for more space
+      sectionHeadingSize: "S",
+      entryTitleSize: "S",
       experienceDateItalic: true,
       educationDateItalic: true,
       projectsDateItalic: true,
@@ -750,8 +771,16 @@ export const TEMPLATE_THEMES: Record<string, ThemeConfig> = {
     entries: "modern",
     contact: "iconDash",
     overrides: {
+      leftColumnWidth: 65, // Main content gets 65%
+      headerPosition: "left",
       showProfileImage: true,
-      profileImageBorder: true,
+      profileImageBorder: false, // No border for stylish header
+      skillsDisplayStyle: "bubble", // Chip style for skills
+      entrySubtitleStyle: "italic",
+      sectionOrder: [
+        "work", "education", "projects", "skills", "languages", "certificates",
+        "summary", "interests", "awards", "publications", "references", "custom",
+      ],
     },
   },
   
@@ -759,46 +788,80 @@ export const TEMPLATE_THEMES: Record<string, ThemeConfig> = {
     typography: "professional",
     headings: "plain",
     layout: "singleColumn",
-    entries: "traditional",
+    entries: "timeline",
     contact: "iconPipe",
     overrides: {
       sectionHeadingStyle: 7,
+      headerPosition: "left",
+      personalDetailsArrangement: 1, // Bar/Row based
+      personalDetailsContactStyle: "bar", // Text with pipes
+      contactSeparator: "pipe",
+      skillsDisplayStyle: "boxed", // Boxed/Chip style
+      sectionOrder: [
+        "summary", "education", "work", "skills", "projects",
+        "certificates", "awards", "languages", "interests", "publications",
+        "references", "custom",
+      ],
     },
   },
   
   polished: {
     typography: "modern",
     headings: "bottomBorder",
-    layout: "twoColumnLeft",
+    layout: "twoColumnWide", // Will use creative-sidebar from factory
     entries: "compact",
     contact: "iconPipe",
     overrides: {
+      leftColumnWidth: 60, // Main content (Left) is 65%
+      headerPosition: "left",
       showProfileImage: true,
+      profileImageBorder: true,
+      sectionOrder: [
+        // Main Content (Left)
+        "summary", "work", "projects",  "publications", "references",
+        // Sidebar Content (Right)
+        "skills", "education", "awards", "certificates", "interests", "languages",  "custom",
+      ],
     },
   },
   
   developer: {
     typography: "professional",
     headings: "filled",
-    layout: "singleColumn",
+    layout: "twoColumnWide", // Will use sidebar-right from factory
     entries: "compact",
     contact: "iconDash",
     overrides: {
+      leftColumnWidth: 60, // Main content gets 60%
+      headerPosition: "left",
       skillsDisplayStyle: "level",
       projectsTechnologiesBold: true,
+      sectionOrder: [
+        "work", "projects",
+        "summary", "skills", "education", "certificates", "languages",
+        "interests", "awards", "publications", "references", "custom",
+      ],
     },
   },
   
   developer2: {
     typography: "professional",
     headings: "accent",
-    layout: "twoColumnLeft",
+    layout: "twoColumnWide", // Will use creative-sidebar from factory
     entries: "modern",
     contact: "iconDash",
     overrides: {
+      leftColumnWidth: 35, // Sidebar is 35%
+      headerPosition: "left",
       showProfileImage: true,
+      profileImageBorder: true,
       skillsDisplayStyle: "level",
       projectsTechnologiesBold: true,
+      sectionOrder: [
+        "summary",
+        "education", "skills", "projects", "certificates", "interests",
+        "work", "awards", "publications", "languages", "references", "custom",
+      ],
     },
   },
 };

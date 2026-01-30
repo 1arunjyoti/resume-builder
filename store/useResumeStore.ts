@@ -42,7 +42,12 @@ const createEmptyResume = (title: string = 'Untitled Resume', templateId: string
       phone: '',
       url: '',
       summary: '',
-      location: { city: '', country: '' },
+      location: {
+        city: '', country: '',
+        postalCode: '',
+        region: '',
+        address: ''
+      },
       profiles: [],
     },
     education: [],

@@ -16,7 +16,10 @@ export function generateMockResume(): Omit<Resume, "id" | "meta"> {
       summary:
         "Passionate full-stack developer with 8+ years of experience building scalable web applications. Expert in React, Node.js, and cloud architecture. Strong advocate for clean code, testing, and developer experience. Led teams of 5-10 engineers and delivered products used by millions.",
       location: {
+        address: "",
         city: "San Francisco",
+        region: "",
+        postalCode: "",
         country: "USA",
       },
       profiles: [
@@ -39,6 +42,8 @@ export function generateMockResume(): Omit<Resume, "id" | "meta"> {
           "Mentored 5 junior developers through pair programming and code reviews",
           "Implemented CI/CD pipeline reducing release cycle from 2 weeks to daily deployments",
         ],
+        location: "San Francisco, CA",
+        name: "TechCorp Inc.",
       },
       {
         id: uuidv4(),
@@ -53,6 +58,8 @@ export function generateMockResume(): Omit<Resume, "id" | "meta"> {
           "Created responsive mobile-first UI increasing mobile conversion by 35%",
           "Integrated with 15+ third-party APIs including Stripe, Plaid, and Twilio",
         ],
+        location: "Remote",
+        name: "StartupXYZ",
       },
       {
         id: uuidv4(),
@@ -66,6 +73,8 @@ export function generateMockResume(): Omit<Resume, "id" | "meta"> {
           "Delivered 20+ client projects on time and within budget",
           "Learned agile methodologies and best practices for collaborative development",
         ],
+        location: "New York, NY",
+        name: "WebAgency Co.",
       },
     ],
     education: [

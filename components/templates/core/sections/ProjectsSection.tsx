@@ -58,7 +58,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
     },
     descriptionText: {
       fontSize,
-      color: "#444444",
+      color: getColor("text", "#444444"),
       marginTop: 2,
       /* marginBottom: 4, */
       lineHeight,
@@ -77,11 +77,11 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
     },
     keywordText: {
       fontSize: fontSize - 1,
-      color: "#374151",
+      color: getColor("text", "#374151"),
     },
     keywordsInline: {
       fontSize: fontSize - 1,
-      color: "#666666",
+      color: getColor("subtext", "#666666"),
       /* marginTop: 4, */
       fontFamily: settings.projectsTechnologiesBold
         ? fonts.bold
@@ -136,29 +136,173 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
         return (
           <View key={proj.id} style={styles.entryBlock}>
             {/* Entry Header */}
-            <EntryHeader
-              title={proj.name}
-              dateRange={dateRange}
-              url={proj.url}
-              layoutStyle={settings.entryLayoutStyle as EntryLayoutStyle}
-              fontSize={fontSize}
-              fonts={fonts}
-              getColor={getColor}
-              titleBold={settings.projectsNameBold}
-              titleItalic={settings.projectsNameItalic}
-              dateBold={settings.projectsDateBold}
-              dateItalic={settings.projectsDateItalic}
-              listStyle={projectsListStyle}
-              index={index}
-              showUrl={
-                Boolean(proj.url) &&
-                (settings.linkShowIcon || settings.linkShowFullUrl)
-              }
-              showLinkIcon={settings.linkShowIcon}
-              showFullUrl={settings.linkShowFullUrl}
-              urlBold={settings.projectsUrlBold}
-              urlItalic={settings.projectsUrlItalic}
-            />
+            {/* Entry Header */}
+            {settings.entryLayoutStyle === 3 ? (
+              // Timeline Layout
+              <View
+                style={{
+                  flexDirection: "row",
+                  marginBottom: 4,
+                }}
+              >
+                {/* Left Column: Dates */}
+                <View style={{ width: 85, paddingRight: 8 }}>
+                  <Text
+                    style={{
+                      fontSize: fontSize,
+                      fontFamily: settings.projectsDateBold
+                        ? fonts.bold
+                        : fonts.base,
+                      fontWeight: settings.projectsDateBold ? "bold" : "normal",
+                      color: getColor("text", "#444444"),
+                      textAlign: "right",
+                    }}
+                  >
+                    {dateRange ? dateRange.split("–")[0].trim() : ""}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: fontSize,
+                      fontFamily: settings.projectsDateBold
+                        ? fonts.bold
+                        : fonts.base,
+                      fontWeight: settings.projectsDateBold ? "bold" : "normal",
+                      color: getColor("text", "#444444"),
+                      textAlign: "right",
+                    }}
+                  >
+                    {dateRange && dateRange.includes("–")
+                      ? " - " + dateRange.split("–")[1].trim()
+                      : ""}
+                  </Text>
+                </View>
+
+                {/* Middle Column: Line and Dot */}
+                <View
+                  style={{
+                    width: 12,
+                    alignItems: "center",
+                    position: "relative",
+                  }}
+                >
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 4,
+                      left: 4,
+                      width: 4,
+                      height: 4,
+                      borderRadius: 2,
+                      backgroundColor: getColor("decorations", "#000"),
+                      zIndex: 10,
+                    }}
+                  />
+                  {(index < projects.length - 1 || true) && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: 4,
+                        bottom: -16,
+                        width: 1,
+                        backgroundColor: "#e5e7eb",
+                        left: 5.5,
+                      }}
+                    />
+                  )}
+                </View>
+
+                {/* Right Column: Content */}
+                <View style={{ flex: 1, paddingLeft: 8 }}>
+                  <Text
+                    style={{
+                      fontSize:
+                        settings.entryTitleSize === "L"
+                          ? fontSize + 2
+                          : fontSize + 1,
+                      fontFamily: settings.projectsNameBold
+                        ? fonts.bold
+                        : fonts.base,
+                      fontWeight: settings.projectsNameBold ? "bold" : "normal",
+                      color: getColor("primary", "#000"),
+                      marginBottom: 2,
+                    }}
+                  >
+                    {proj.name}
+                  </Text>
+
+                  {/* Keywords/Technologies */}
+                  {proj.keywords && proj.keywords.length > 0 && (
+                    <Text style={[styles.keywordsInline, { marginBottom: 2 }]}>
+                      Technologies: {proj.keywords.join(", ")}
+                    </Text>
+                  )}
+
+                  {/* Description */}
+                  {proj.description && (
+                    <RichText
+                      text={proj.description}
+                      fontSize={fontSize}
+                      fonts={fonts}
+                      lineHeight={lineHeight}
+                      linkColor={linkColor}
+                      showLinkIcon={settings.linkShowIcon}
+                      showFullUrl={settings.linkShowFullUrl}
+                      style={styles.descriptionText}
+                    />
+                  )}
+
+                  {/* Highlights */}
+                  {proj.highlights &&
+                    proj.highlights.length > 0 &&
+                    settings.useBullets !== false && (
+                      <View
+                        style={[styles.highlightsWrapper, { marginTop: 4 }]}
+                      >
+                        <BulletList
+                          items={proj.highlights}
+                          style={highlightsListStyle}
+                          fontSize={fontSize}
+                          fonts={fonts}
+                          lineHeight={lineHeight}
+                          bulletMargin={settings.bulletMargin}
+                          bulletColor={getColor("decorations", "#333")}
+                          textColor={getColor("text", "#444444")}
+                          getColor={getColor}
+                          linkColor={linkColor}
+                          showLinkIcon={settings.linkShowIcon}
+                          showFullUrl={settings.linkShowFullUrl}
+                          bold={settings.projectsFeaturesBold}
+                          italic={settings.projectsFeaturesItalic}
+                        />
+                      </View>
+                    )}
+                </View>
+              </View>
+            ) : (
+              <EntryHeader
+                title={proj.name}
+                dateRange={dateRange}
+                url={proj.url}
+                layoutStyle={settings.entryLayoutStyle as EntryLayoutStyle}
+                fontSize={fontSize}
+                fonts={fonts}
+                getColor={getColor}
+                titleBold={settings.projectsNameBold}
+                titleItalic={settings.projectsNameItalic}
+                dateBold={settings.projectsDateBold}
+                dateItalic={settings.projectsDateItalic}
+                listStyle={projectsListStyle}
+                index={index}
+                showUrl={
+                  Boolean(proj.url) &&
+                  (settings.linkShowIcon || settings.linkShowFullUrl)
+                }
+                showLinkIcon={settings.linkShowIcon}
+                showFullUrl={settings.linkShowFullUrl}
+                urlBold={settings.projectsUrlBold}
+                urlItalic={settings.projectsUrlItalic}
+              />
+            )}
 
             {/* URL (if not shown in header) */}
             {/* URL (if not shown in header) */}
@@ -173,8 +317,8 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                 </Link>
               )}
 
-            {/* Description */}
-            {proj.description && (
+            {/* Description (Render here if NOT timeline layout) */}
+            {proj.description && settings.entryLayoutStyle !== 3 && (
               <RichText
                 text={proj.description}
                 fontSize={fontSize}
@@ -187,10 +331,11 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
               />
             )}
 
-            {/* Highlights */}
+            {/* Highlights (Render here if NOT timeline layout) */}
             {proj.highlights &&
               proj.highlights.length > 0 &&
-              settings.useBullets !== false && (
+              settings.useBullets !== false &&
+              settings.entryLayoutStyle !== 3 && (
                 <View style={styles.highlightsWrapper}>
                   <BulletList
                     items={proj.highlights}
@@ -200,7 +345,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     lineHeight={lineHeight}
                     bulletMargin={settings.bulletMargin}
                     bulletColor={getColor("decorations", "#333")}
-                    textColor="#444444"
+                    textColor={getColor("text", "#444444")}
                     getColor={getColor}
                     linkColor={linkColor}
                     showLinkIcon={settings.linkShowIcon}
@@ -211,12 +356,14 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                 </View>
               )}
 
-            {/* Keywords/Technologies */}
-            {proj.keywords && proj.keywords.length > 0 && (
-              <Text style={styles.keywordsInline}>
-                Technologies: {proj.keywords.join(", ")}
-              </Text>
-            )}
+            {/* Keywords/Technologies (Render here if NOT timeline layout) */}
+            {proj.keywords &&
+              proj.keywords.length > 0 &&
+              settings.entryLayoutStyle !== 3 && (
+                <Text style={styles.keywordsInline}>
+                  Technologies: {proj.keywords.join(", ")}
+                </Text>
+              )}
           </View>
         );
       })}
