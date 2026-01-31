@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import type { Resume } from "@/db";
@@ -10,7 +11,6 @@ interface DeveloperHeaderProps {
 
 export const DeveloperHeader = ({
   basics,
-  settings,
   themeColor,
 }: DeveloperHeaderProps) => {
   const styles = StyleSheet.create({
