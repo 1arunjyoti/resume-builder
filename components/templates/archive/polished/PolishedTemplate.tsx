@@ -129,7 +129,9 @@ export function PolishedTemplate({ resume }: PolishedTemplateProps) {
     education: () => (
       <PolishedEducation education={education} {...commonProps} />
     ),
-    skills: () => <PolishedSkills skills={skills} {...commonProps} />, // Sidebar usually
+    skills: () => (
+      <PolishedSkills skills={skills} {...commonProps} isSidebar={true} />
+    ), // Sidebar usually
     projects: () => <ClassicProjects projects={projects} {...commonProps} />, // Reuse for now
     certificates: () => (
       <ClassicCertificates certificates={certificates} {...commonProps} />

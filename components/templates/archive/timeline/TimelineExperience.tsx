@@ -3,7 +3,6 @@ import { WorkExperience } from "@/db";
 
 interface TimelineExperienceProps {
   work: WorkExperience[];
-  settings: any;
   getColor: (target: string, fallback?: string) => string;
   fontSize: number;
   baseFont: string;

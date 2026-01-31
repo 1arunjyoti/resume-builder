@@ -3,7 +3,6 @@ import { Skill } from "@/db";
 
 interface TimelineSkillsProps {
   skills: Skill[];
-  settings: any;
   getColor: (target: string, fallback?: string) => string;
   fontSize: number;
   baseFont: string;

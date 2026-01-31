@@ -1,5 +1,4 @@
 import Dexie, { type EntityTable } from 'dexie';
-import { ReactNode } from 'react';
 
 // Resume data model based on JSON Resume standard
 export interface ResumeBasics {
@@ -11,9 +10,9 @@ export interface ResumeBasics {
   url: string;
   summary: string;
   location: {
-    region?: ReactNode;
-    address?: ReactNode;
-    postalCode?: ReactNode;
+    postalCode: string;
+    region: string;
+    address: string;
     city: string;
     country: string;
   };
@@ -25,8 +24,8 @@ export interface ResumeBasics {
 }
 
 export interface WorkExperience {
-  location?: string;
-  name?: string;
+  location: string;
+  name: string;
   id: string;
   company: string;
   position: string;
@@ -40,7 +39,6 @@ export interface WorkExperience {
 export interface Education {
   id: string;
   institution: string;
-  location?: string;
   url: string;
   area: string;
   studyType: string;

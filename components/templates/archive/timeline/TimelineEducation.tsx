@@ -3,7 +3,6 @@ import { Education } from "@/db";
 
 interface TimelineEducationProps {
   education: Education[];
-  settings: any;
   getColor: (target: string, fallback?: string) => string;
   fontSize: number;
   baseFont: string;
