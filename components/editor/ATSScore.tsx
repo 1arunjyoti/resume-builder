@@ -139,7 +139,7 @@ export function ATSScore({ resume, className }: ATSScoreProps) {
           </Badge>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-full sm:max-w-6xl max-h-[90vh] overflow-y-auto rounded-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Trophy className="size-5 text-yellow-500" />
@@ -191,99 +191,361 @@ export function ATSScore({ resume, className }: ATSScoreProps) {
           </div>
 
           {scoreResult && (
-            <div className="space-y-6 py-4">
-              {/* Score Ring */}
-              <div className="flex flex-col items-center justify-center">
-                <div className="relative size-32">
-                  <svg className="size-full -rotate-90" viewBox="0 0 100 100">
-                    <circle
-                      className="stroke-muted"
-                      strokeWidth="8"
-                      fill="transparent"
-                      r="40"
-                      cx="50"
-                      cy="50"
-                    />
-                    <circle
-                      className={cn(
-                        scoreRingColor(scoreResult.totalScore),
-                        "transition-all duration-1000 ease-out",
-                      )}
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                      fill="transparent"
-                      r="40"
-                      cx="50"
-                      cy="50"
-                      strokeDasharray={`${2 * Math.PI * 40}`}
-                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - scoreResult.totalScore / 100)}`}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <span
-                      className={cn(
-                        "text-3xl font-bold",
-                        scoreStartColor(scoreResult.totalScore),
-                      )}
-                    >
-                      {scoreResult.totalScore}
-                    </span>
-                    <span className="text-xs text-muted-foreground uppercase tracking-widest">
-                      Score
-                    </span>
+            <div className="grid gap-6 py-4 lg:grid-cols-[320px,1fr]">
+              {/* Left: Score Summary */}
+              <div className="space-y-4">
+                <div className="rounded-xl border bg-muted/30 p-4">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="relative size-32">
+                      <svg
+                        className="size-full -rotate-90"
+                        viewBox="0 0 100 100"
+                      >
+                        <circle
+                          className="stroke-muted"
+                          strokeWidth="8"
+                          fill="transparent"
+                          r="40"
+                          cx="50"
+                          cy="50"
+                        />
+                        <circle
+                          className={cn(
+                            scoreRingColor(scoreResult.totalScore),
+                            "transition-all duration-1000 ease-out",
+                          )}
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          fill="transparent"
+                          r="40"
+                          cx="50"
+                          cy="50"
+                          strokeDasharray={`${2 * Math.PI * 40}`}
+                          strokeDashoffset={`${2 * Math.PI * 40 * (1 - scoreResult.totalScore / 100)}`}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                        <span
+                          className={cn(
+                            "text-3xl font-bold",
+                            scoreStartColor(scoreResult.totalScore),
+                          )}
+                        >
+                          {scoreResult.totalScore}
+                        </span>
+                        <span className="text-xs text-muted-foreground uppercase tracking-widest">
+                          Score
+                        </span>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-sm text-center text-muted-foreground max-w-xs">
+                      {scoreResult.totalScore >= 80
+                        ? "Your resume is well-optimized!"
+                        : scoreResult.totalScore >= 50
+                          ? "Good start, but needs improvement."
+                          : "Needs significant work to pass ATS filters."}
+                    </p>
                   </div>
                 </div>
-                <p className="mt-2 text-sm text-center text-muted-foreground max-w-xs">
-                  {scoreResult.totalScore >= 80
-                    ? "Your resume is well-optimized!"
-                    : scoreResult.totalScore >= 50
-                      ? "Good start, but needs improvement."
-                      : "Needs significant work to pass ATS filters."}
-                </p>
+
+                <div className="rounded-xl border bg-background p-4">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                    Subscores
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      ATS: {scoreResult.atsScore}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      Readability: {scoreResult.readabilityScore}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      Coverage: {scoreResult.coverageScore}
+                    </Badge>
+                    {typeof scoreResult.matchScore === "number" && (
+                      <Badge variant="outline" className="text-xs">
+                        JD Match: {scoreResult.matchScore}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border bg-background p-4">
+                  <h4 className="font-medium mb-2 flex items-center gap-2 text-sm">
+                    <AlertTriangle className="size-4" />
+                    Top 3 Fixes
+                  </h4>
+                  {scoreResult.prioritizedFixes.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No high-priority issues found.
+                    </p>
+                  ) : (
+                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                      {scoreResult.prioritizedFixes.slice(0, 3).map((fix) => (
+                        <li key={fix.id}>
+                          <strong className="text-foreground">
+                            {fix.title}:
+                          </strong>{" "}
+                          {fix.action}{" "}
+                          <span className="text-muted-foreground">
+                            ({fix.rationale})
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
 
-              {/* Breakdown */}
+              {/* Right: Detailed Breakdown */}
               <div className="space-y-6">
                 <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">
                   Detailed Breakdown
                 </h3>
 
-                {/* Impact Checks */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-semibold uppercase text-muted-foreground/80 flex items-center gap-2">
-                    <Target className="size-3" /> Impact & Reach
-                  </h4>
-                  {scoreResult.checks
-                    .filter((c) => c.category === "impact")
-                    .map((check) => (
-                      <CheckItem key={check.id} check={check} />
-                    ))}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground/80 flex items-center gap-2">
+                      <Target className="size-3" /> Impact & Reach
+                    </h4>
+                    {scoreResult.checks
+                      .filter((c) => c.category === "impact")
+                      .map((check) => (
+                        <CheckItem key={check.id} check={check} />
+                      ))}
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground/80 flex items-center gap-2">
+                      <Trophy className="size-3" /> Content Quality
+                    </h4>
+                    {scoreResult.checks
+                      .filter((c) => c.category === "content")
+                      .map((check) => (
+                        <CheckItem key={check.id} check={check} />
+                      ))}
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground/80 flex items-center gap-2">
+                      <CheckCircle className="size-3" /> Formatting
+                    </h4>
+                    {scoreResult.checks
+                      .filter((c) => c.category === "formatting")
+                      .map((check) => (
+                        <CheckItem key={check.id} check={check} />
+                      ))}
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground/80 flex items-center gap-2">
+                      <Info className="size-3" /> Readability
+                    </h4>
+                    {scoreResult.checks
+                      .filter((c) => c.category === "readability")
+                      .map((check) => (
+                        <CheckItem key={check.id} check={check} />
+                      ))}
+                  </div>
                 </div>
 
-                {/* Content Checks */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-semibold uppercase text-muted-foreground/80 flex items-center gap-2">
-                    <Trophy className="size-3" /> Content Quality
-                  </h4>
-                  {scoreResult.checks
-                    .filter((c) => c.category === "content")
-                    .map((check) => (
-                      <CheckItem key={check.id} check={check} />
-                    ))}
-                </div>
-
-                {/* Formatting Checks */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-semibold uppercase text-muted-foreground/80 flex items-center gap-2">
-                    <CheckCircle className="size-3" /> Formatting
-                  </h4>
-                  {scoreResult.checks
-                    .filter((c) => c.category === "formatting")
-                    .map((check) => (
-                      <CheckItem key={check.id} check={check} />
-                    ))}
-                </div>
+                {scoreResult.readabilityNotes.length > 0 && (
+                  <div className="bg-muted/40 p-4 rounded-lg text-sm text-muted-foreground">
+                    <div className="text-xs uppercase tracking-wider mb-2">
+                      Readability Notes
+                    </div>
+                    <ul className="list-disc list-inside space-y-1">
+                      {scoreResult.readabilityNotes.map((note, idx) => (
+                        <li key={`readability-note-${idx}`}>{note}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
+
+              {/* Keyword Match */}
+              {scoreResult.keywordMatch && (
+                <div className="bg-muted/40 p-4 rounded-lg space-y-3">
+                  <h4 className="font-medium mb-1 flex items-center gap-2 text-sm">
+                    <Target className="size-4" />
+                    Job Description Match
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                      Top Missing Priorities
+                    </div>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <div>
+                        Skills:{" "}
+                        {scoreResult.keywordMatch.prioritizedMissing.skills
+                          .length > 0
+                          ? scoreResult.keywordMatch.prioritizedMissing.skills.join(
+                              ", ",
+                            )
+                          : "None"}
+                      </div>
+                      <div>
+                        Tools:{" "}
+                        {scoreResult.keywordMatch.prioritizedMissing.tools
+                          .length > 0
+                          ? scoreResult.keywordMatch.prioritizedMissing.tools.join(
+                              ", ",
+                            )
+                          : "None"}
+                      </div>
+                      <div>
+                        Responsibilities:{" "}
+                        {scoreResult.keywordMatch.prioritizedMissing
+                          .responsibilities.length > 0
+                          ? scoreResult.keywordMatch.prioritizedMissing.responsibilities.join(
+                              ", ",
+                            )
+                          : "None"}
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider pt-2">
+                      Suggested Placement
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Skills:{" "}
+                      {scoreResult.keywordMatch.suggestedPlacement.skills}
+                      <br />
+                      Tools: {scoreResult.keywordMatch.suggestedPlacement.tools}
+                      <br />
+                      Responsibilities:{" "}
+                      {
+                        scoreResult.keywordMatch.suggestedPlacement
+                          .responsibilities
+                      }
+                    </div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                      Missing Skills
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {scoreResult.keywordMatch.categories.skills.missing
+                        .length > 0 ? (
+                        scoreResult.keywordMatch.categories.skills.missing
+                          .slice(0, 10)
+                          .map((term) => (
+                            <Badge
+                              key={`miss-skill-${term}`}
+                              variant="secondary"
+                              className="text-xs"
+                            >
+                              {term}
+                            </Badge>
+                          ))
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          No major skill gaps.
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider pt-2">
+                      Missing Tools
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {scoreResult.keywordMatch.categories.tools.missing
+                        .length > 0 ? (
+                        scoreResult.keywordMatch.categories.tools.missing
+                          .slice(0, 10)
+                          .map((term) => (
+                            <Badge
+                              key={`miss-tool-${term}`}
+                              variant="secondary"
+                              className="text-xs"
+                            >
+                              {term}
+                            </Badge>
+                          ))
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          No major tool gaps.
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider pt-2">
+                      Missing Responsibilities
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {scoreResult.keywordMatch.categories.responsibilities
+                        .missing.length > 0 ? (
+                        scoreResult.keywordMatch.categories.responsibilities.missing
+                          .slice(0, 8)
+                          .map((term) => (
+                            <Badge
+                              key={`miss-resp-${term}`}
+                              variant="secondary"
+                              className="text-xs"
+                            >
+                              {term}
+                            </Badge>
+                          ))
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          Responsibilities aligned.
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider pt-2">
+                      Matched Keywords
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {scoreResult.keywordMatch.matched.length > 0 ? (
+                        scoreResult.keywordMatch.matched
+                          .slice(0, 12)
+                          .map((term) => (
+                            <Badge
+                              key={`match-${term}`}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {term}
+                            </Badge>
+                          ))
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          No keyword matches detected.
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Bullet Suggestions */}
+              {scoreResult.bulletSuggestions.length > 0 && (
+                <div className="bg-muted/40 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2 flex items-center gap-2 text-sm">
+                    <Target className="size-4" />
+                    Bullet Suggestions
+                  </h4>
+                  <div className="space-y-3 text-sm">
+                    {scoreResult.bulletSuggestions.map((item, idx) => (
+                      <div
+                        key={`${item.companyOrProject}-${idx}`}
+                        className="space-y-1"
+                      >
+                        <div className="text-xs uppercase tracking-wider text-muted-foreground">
+                          {item.section} — {item.companyOrProject}
+                        </div>
+                        <div className="text-muted-foreground">
+                          <span className="font-medium text-foreground">
+                            Issue:
+                          </span>{" "}
+                          {item.issue}
+                        </div>
+                        <div className="text-muted-foreground">
+                          <span className="font-medium text-foreground">
+                            Template:
+                          </span>{" "}
+                          {item.template}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Feedback Summary */}
               <div className="bg-muted/50 p-4 rounded-lg">
@@ -300,6 +562,29 @@ export function ATSScore({ resume, className }: ATSScoreProps) {
                       .map((c) => <li key={c.id}>{c.message}</li>)
                   )}
                 </ul>
+              </div>
+
+              {/* ATS Parsing Preview */}
+              <div className="bg-muted/40 p-4 rounded-lg space-y-3">
+                <h4 className="font-medium mb-1 flex items-center gap-2 text-sm">
+                  <Info className="size-4" />
+                  ATS Parsing Preview
+                </h4>
+                {scoreResult.parsingRisks.length > 0 && (
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    {scoreResult.parsingRisks.map((risk) => (
+                      <div key={risk.id}>
+                        <strong className="text-foreground">
+                          {risk.message}
+                        </strong>{" "}
+                        {risk.suggestion}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <pre className="text-xs whitespace-pre-wrap bg-background/60 p-3 rounded border">
+                  {scoreResult.parsingPreview}
+                </pre>
               </div>
             </div>
           )}
