@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, Plus, Trash2 } from "lucide-react";
+import { GraduationCap, Plus, Trash2, Sparkles, Loader2 } from "lucide-react";
 import type { Education } from "@/db";
 import { v4 as uuidv4 } from "uuid";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
@@ -16,6 +16,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useLLMSettingsStore } from "@/store/useLLMSettingsStore";
+import { ensureLLMProvider } from "@/lib/llm/ensure-provider";
+import {
+  buildSectionSummaryPrompt,
+  buildRewritePrompt,
+  buildGrammarPrompt,
+} from "@/lib/llm/prompts";
+import { processGrammarOutput } from "@/lib/llm/grammar";
+import { redactContactInfo } from "@/lib/llm/redaction";
 
 interface EducationFormProps {
   data: Education[];
@@ -38,6 +47,14 @@ const getScoreValue = (score: string) => {
 };
 
 export function EducationForm({ data, onChange }: EducationFormProps) {
+  const providerId = useLLMSettingsStore((state) => state.providerId);
+  const apiKeys = useLLMSettingsStore((state) => state.apiKeys);
+  const consent = useLLMSettingsStore((state) => state.consent);
+  const redaction = useLLMSettingsStore((state) => state.redaction);
+  const tone = useLLMSettingsStore((state) => state.tone);
+  const [generatedSummaries, setGeneratedSummaries] = useState<Record<string, string>>({});
+  const [llmErrors, setLlmErrors] = useState<Record<string, string>>({});
+  const [isGenerating, setIsGenerating] = useState<Record<string, boolean>>({});
   const addEducation = useCallback(() => {
     const newEdu: Education = {
       id: uuidv4(),
@@ -112,6 +129,164 @@ export function EducationForm({ data, onChange }: EducationFormProps) {
       );
     },
     [data, onChange],
+  );
+
+  const buildInput = useCallback(
+    (edu: Education) => {
+      const peerContext = data
+        .filter((item) => item.id !== edu.id)
+        .slice(0, 3)
+        .map((item) =>
+          [
+            item.institution ? `Institution: ${item.institution}` : "",
+            item.studyType || item.area
+              ? `Program: ${[item.studyType, item.area]
+                  .filter(Boolean)
+                  .join(" in ")}`
+              : "",
+            item.summary ? `Summary: ${item.summary}` : "",
+          ]
+            .filter(Boolean)
+            .join(" | "),
+        )
+        .filter(Boolean);
+
+      const parts = [
+        edu.institution ? `Institution: ${edu.institution}` : "",
+        edu.studyType || edu.area
+          ? `Program: ${[edu.studyType, edu.area].filter(Boolean).join(" in ")}`
+          : "",
+        edu.score ? `Score: ${edu.score}` : "",
+        edu.summary ? `Current Summary: ${edu.summary}` : "",
+        peerContext.length ? `Other Education:\n${peerContext.join("\n")}` : "",
+      ].filter(Boolean);
+      const raw = parts.join("\n");
+      return redaction.stripContactInfo ? redactContactInfo(raw) : raw;
+    },
+    [data, redaction.stripContactInfo],
+  );
+
+  const ensureProvider = useCallback((requiredConsent: "generation" | "rewriting" | null = "generation") => {
+    return ensureLLMProvider({
+      providerId,
+      apiKeys,
+      consent,
+      requiredConsent,
+    });
+  }, [apiKeys, consent, providerId]);
+
+  const handleGenerateSummary = useCallback(
+    async (edu: Education) => {
+      const result = ensureProvider("generation");
+      setLlmErrors((prev) => ({ ...prev, [edu.id]: "" }));
+      setGeneratedSummaries((prev) => ({ ...prev, [edu.id]: "" }));
+      if ("error" in result) {
+        setLlmErrors((prev) => ({ ...prev, [edu.id]: result.error }));
+        return;
+      }
+      setIsGenerating((prev) => ({ ...prev, [edu.id]: true }));
+      try {
+        const prompt = buildSectionSummaryPrompt("education", buildInput(edu));
+        const output = await result.provider.generateText(result.apiKey, {
+          prompt,
+          temperature: 0.5,
+          maxTokens: 256,
+        });
+        setGeneratedSummaries((prev) => ({ ...prev, [edu.id]: output }));
+      } catch (err) {
+        setLlmErrors((prev) => ({ ...prev, [edu.id]: (err as Error).message }));
+      } finally {
+        setIsGenerating((prev) => ({ ...prev, [edu.id]: false }));
+      }
+    },
+    [buildInput, ensureProvider],
+  );
+
+  const handleImproveSummary = useCallback(
+    async (edu: Education) => {
+      setLlmErrors((prev) => ({ ...prev, [edu.id]: "" }));
+      setGeneratedSummaries((prev) => ({ ...prev, [edu.id]: "" }));
+      if (!edu.summary?.trim()) {
+        setLlmErrors((prev) => ({
+          ...prev,
+          [edu.id]: "Add a description before improving it.",
+        }));
+        return;
+      }
+      const result = ensureProvider("rewriting");
+      if ("error" in result) {
+        setLlmErrors((prev) => ({ ...prev, [edu.id]: result.error }));
+        return;
+      }
+      setIsGenerating((prev) => ({ ...prev, [edu.id]: true }));
+      try {
+        const raw = redaction.stripContactInfo
+          ? redactContactInfo(edu.summary)
+          : edu.summary;
+        const prompt = buildRewritePrompt("education", raw, tone, buildInput(edu));
+        const output = await result.provider.generateText(result.apiKey, {
+          prompt,
+          temperature: 0.4,
+          maxTokens: 256,
+        });
+        setGeneratedSummaries((prev) => ({ ...prev, [edu.id]: output }));
+      } catch (err) {
+        setLlmErrors((prev) => ({ ...prev, [edu.id]: (err as Error).message }));
+      } finally {
+        setIsGenerating((prev) => ({ ...prev, [edu.id]: false }));
+      }
+    },
+    [buildInput, ensureProvider, redaction.stripContactInfo, tone],
+  );
+
+  const handleGrammarSummary = useCallback(
+    async (edu: Education) => {
+      setLlmErrors((prev) => ({ ...prev, [edu.id]: "" }));
+      setGeneratedSummaries((prev) => ({ ...prev, [edu.id]: "" }));
+      if (!edu.summary?.trim()) {
+        setLlmErrors((prev) => ({
+          ...prev,
+          [edu.id]: "Add a description before checking grammar.",
+        }));
+        return;
+      }
+      const result = ensureProvider("rewriting");
+      if ("error" in result) {
+        setLlmErrors((prev) => ({ ...prev, [edu.id]: result.error }));
+        return;
+      }
+      setIsGenerating((prev) => ({ ...prev, [edu.id]: true }));
+      try {
+        const raw = redaction.stripContactInfo
+          ? redactContactInfo(edu.summary)
+          : edu.summary;
+        const prompt = buildGrammarPrompt("education", raw);
+        const output = await result.provider.generateText(result.apiKey, {
+          prompt,
+          temperature: 0.2,
+          maxTokens: 256,
+        });
+        const grammarResult = processGrammarOutput(raw, output);
+        if (grammarResult.error) {
+          const errMsg = grammarResult.error;
+          setLlmErrors((prev) => ({ ...prev, [edu.id]: errMsg }));
+          return;
+        }
+        if (grammarResult.noChanges) {
+          setLlmErrors((prev) => ({ ...prev, [edu.id]: "✓ No grammar issues found." }));
+          return;
+        }
+        setGeneratedSummaries((prev) => ({
+          ...prev,
+          [edu.id]: grammarResult.text || "",
+        }));
+      } catch (err) {
+        setLlmErrors((prev) => ({ ...prev, [edu.id]: (err as Error).message }));
+      } finally {
+        setIsGenerating((prev) => ({ ...prev, [edu.id]: false }));
+      }
+    },
+    [ensureProvider, redaction.stripContactInfo],
   );
 
   return (
@@ -292,7 +467,41 @@ export function EducationForm({ data, onChange }: EducationFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor={`summary-${edu.id}`}>Description</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor={`summary-${edu.id}`}>Description</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleGenerateSummary(edu)}
+                  disabled={isGenerating[edu.id]}
+                >
+                  {isGenerating[edu.id] ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  Generate
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleImproveSummary(edu)}
+                  disabled={isGenerating[edu.id]}
+                >
+                  Improve
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleGrammarSummary(edu)}
+                  disabled={isGenerating[edu.id]}
+                >
+                  Grammar
+                </Button>
+              </div>
               <RichTextEditor
                 id={`summary-${edu.id}`}
                 placeholder="Brief description of your studies, thesis, or key achievements..."
@@ -300,6 +509,50 @@ export function EducationForm({ data, onChange }: EducationFormProps) {
                 value={edu.summary || ""}
                 onChange={(value) => updateEducation(edu.id, "summary", value)}
               />
+              {llmErrors[edu.id] ? (
+                <p className="text-xs text-destructive">{llmErrors[edu.id]}</p>
+              ) : null}
+              {generatedSummaries[edu.id] ? (
+                <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Generated Description
+                  </p>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {generatedSummaries[edu.id]}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        updateEducation(edu.id, "summary", generatedSummaries[edu.id]);
+                        setGeneratedSummaries((prev) => ({ ...prev, [edu.id]: "" }));
+                      }}
+                    >
+                      Apply
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleGenerateSummary(edu)}
+                      disabled={isGenerating[edu.id]}
+                    >
+                      Regenerate
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setGeneratedSummaries((prev) => ({ ...prev, [edu.id]: "" }))
+                      }
+                    >
+                      Discard
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="space-y-2">

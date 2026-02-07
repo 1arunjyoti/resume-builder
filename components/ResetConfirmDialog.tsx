@@ -35,7 +35,7 @@ export function ResetConfirmDialog({
       <DialogTrigger asChild>
         {trigger || (
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
           >
@@ -44,7 +44,7 @@ export function ResetConfirmDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-106.25">
         <DialogHeader>
           <div className="flex items-center gap-2 text-destructive mb-2">
             <AlertTriangle className="h-5 w-5" />

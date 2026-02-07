@@ -338,8 +338,9 @@ export interface Resume {
 
 export interface AppSettings {
   id: string;
-  theme: 'light' | 'dark' | 'system';
-  defaultTemplateId: string;
+  theme?: 'light' | 'dark' | 'system';
+  defaultTemplateId?: string;
+  value?: string;
 }
 
 // Dexie database definition

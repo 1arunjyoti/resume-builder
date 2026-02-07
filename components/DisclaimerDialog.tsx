@@ -23,7 +23,7 @@ export function DisclaimerDialog({ trigger }: DisclaimerDialogProps) {
           <Button
             variant="outline"
             size="sm"
-            className="border-primary/30 hover:bg-primary/10"
+            className="hover:bg-primary/10"
           >
             <Info className="h-4 w-4" />
           </Button>

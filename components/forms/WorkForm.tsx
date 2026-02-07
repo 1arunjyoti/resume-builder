@@ -1,14 +1,24 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Plus, Trash2 } from "lucide-react";
+import { Briefcase, Plus, Sparkles, Trash2, Loader2 } from "lucide-react";
 import type { WorkExperience } from "@/db";
 import { v4 as uuidv4 } from "uuid";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import { useLLMSettingsStore } from "@/store/useLLMSettingsStore";
+import { ensureLLMProvider } from "@/lib/llm/ensure-provider";
+import {
+  buildHighlightsPrompt,
+  buildSectionSummaryPrompt,
+  buildRewritePrompt,
+  buildGrammarPrompt,
+} from "@/lib/llm/prompts";
+import { processGrammarOutput } from "@/lib/llm/grammar";
+import { redactContactInfo } from "@/lib/llm/redaction";
 
 interface WorkFormProps {
   data: WorkExperience[];
@@ -16,6 +26,15 @@ interface WorkFormProps {
 }
 
 export function WorkForm({ data, onChange }: WorkFormProps) {
+  const providerId = useLLMSettingsStore((state) => state.providerId);
+  const apiKeys = useLLMSettingsStore((state) => state.apiKeys);
+  const consent = useLLMSettingsStore((state) => state.consent);
+  const redaction = useLLMSettingsStore((state) => state.redaction);
+  const tone = useLLMSettingsStore((state) => state.tone);
+  const [generatedSummaries, setGeneratedSummaries] = useState<Record<string, string>>({});
+  const [generatedHighlights, setGeneratedHighlights] = useState<Record<string, string[]>>({});
+  const [llmErrors, setLlmErrors] = useState<Record<string, string>>({});
+  const [isGenerating, setIsGenerating] = useState<Record<string, boolean>>({});
   const addExperience = useCallback(() => {
     const newExp: WorkExperience = {
       id: uuidv4(),
@@ -90,6 +109,190 @@ export function WorkForm({ data, onChange }: WorkFormProps) {
       );
     },
     [data, onChange],
+  );
+
+  const buildInput = useCallback(
+    (exp: WorkExperience) => {
+      const peerContext = data
+        .filter((item) => item.id !== exp.id)
+        .slice(0, 3)
+        .map((item) =>
+          [
+            item.position ? `Role: ${item.position}` : "",
+            item.company ? `Company: ${item.company}` : "",
+            item.summary ? `Summary: ${item.summary}` : "",
+          ]
+            .filter(Boolean)
+            .join(" | "),
+        )
+        .filter(Boolean);
+
+      const parts = [
+        exp.position ? `Role: ${exp.position}` : "",
+        exp.company ? `Company: ${exp.company}` : "",
+        exp.location ? `Location: ${exp.location}` : "",
+        exp.summary ? `Current Summary: ${exp.summary}` : "",
+        peerContext.length ? `Other Experience:\n${peerContext.join("\n")}` : "",
+      ].filter(Boolean);
+      const raw = parts.join("\n");
+      return redaction.stripContactInfo ? redactContactInfo(raw) : raw;
+    },
+    [data, redaction.stripContactInfo],
+  );
+
+  const ensureProvider = useCallback((requiredConsent: "generation" | "rewriting" | null = "generation") => {
+    return ensureLLMProvider({
+      providerId,
+      apiKeys,
+      consent,
+      requiredConsent,
+    });
+  }, [apiKeys, consent, providerId]);
+
+  const handleGenerateSummary = useCallback(
+    async (exp: WorkExperience) => {
+      const result = ensureProvider("generation");
+      setLlmErrors((prev) => ({ ...prev, [exp.id]: "" }));
+      setGeneratedSummaries((prev) => ({ ...prev, [exp.id]: "" }));
+      if ("error" in result) {
+        setLlmErrors((prev) => ({ ...prev, [exp.id]: result.error }));
+        return;
+      }
+      setIsGenerating((prev) => ({ ...prev, [exp.id]: true }));
+      try {
+        const prompt = buildSectionSummaryPrompt("work experience", buildInput(exp));
+        const output = await result.provider.generateText(result.apiKey, {
+          prompt,
+          temperature: 0.5,
+          maxTokens: 256,
+        });
+        setGeneratedSummaries((prev) => ({ ...prev, [exp.id]: output }));
+      } catch (err) {
+        setLlmErrors((prev) => ({ ...prev, [exp.id]: (err as Error).message }));
+      } finally {
+        setIsGenerating((prev) => ({ ...prev, [exp.id]: false }));
+      }
+    },
+    [buildInput, ensureProvider],
+  );
+
+  const handleImproveSummary = useCallback(
+    async (exp: WorkExperience) => {
+      setLlmErrors((prev) => ({ ...prev, [exp.id]: "" }));
+      setGeneratedSummaries((prev) => ({ ...prev, [exp.id]: "" }));
+      if (!exp.summary?.trim()) {
+        setLlmErrors((prev) => ({
+          ...prev,
+          [exp.id]: "Add a description before improving it.",
+        }));
+        return;
+      }
+      const result = ensureProvider("rewriting");
+      if ("error" in result) {
+        setLlmErrors((prev) => ({ ...prev, [exp.id]: result.error }));
+        return;
+      }
+      setIsGenerating((prev) => ({ ...prev, [exp.id]: true }));
+      try {
+        const raw = redaction.stripContactInfo
+          ? redactContactInfo(exp.summary)
+          : exp.summary;
+        const context = buildInput(exp);
+        const prompt = buildRewritePrompt("work experience", raw, tone, context);
+        const output = await result.provider.generateText(result.apiKey, {
+          prompt,
+          temperature: 0.4,
+          maxTokens: 256,
+        });
+        setGeneratedSummaries((prev) => ({ ...prev, [exp.id]: output }));
+      } catch (err) {
+        setLlmErrors((prev) => ({ ...prev, [exp.id]: (err as Error).message }));
+      } finally {
+        setIsGenerating((prev) => ({ ...prev, [exp.id]: false }));
+      }
+    },
+    [buildInput, ensureProvider, redaction.stripContactInfo, tone],
+  );
+
+  const handleGrammarSummary = useCallback(
+    async (exp: WorkExperience) => {
+      setLlmErrors((prev) => ({ ...prev, [exp.id]: "" }));
+      setGeneratedSummaries((prev) => ({ ...prev, [exp.id]: "" }));
+      if (!exp.summary?.trim()) {
+        setLlmErrors((prev) => ({
+          ...prev,
+          [exp.id]: "Add a description before checking grammar.",
+        }));
+        return;
+      }
+      const result = ensureProvider("rewriting");
+      if ("error" in result) {
+        setLlmErrors((prev) => ({ ...prev, [exp.id]: result.error }));
+        return;
+      }
+      setIsGenerating((prev) => ({ ...prev, [exp.id]: true }));
+      try {
+        const raw = redaction.stripContactInfo
+          ? redactContactInfo(exp.summary)
+          : exp.summary;
+        const prompt = buildGrammarPrompt("work experience", raw);
+        const output = await result.provider.generateText(result.apiKey, {
+          prompt,
+          temperature: 0.2,
+          maxTokens: 256,
+        });
+        const grammarResult = processGrammarOutput(raw, output);
+        if (grammarResult.error) {
+          const errMsg = grammarResult.error;
+          setLlmErrors((prev) => ({ ...prev, [exp.id]: errMsg }));
+          return;
+        }
+        if (grammarResult.noChanges) {
+          setLlmErrors((prev) => ({ ...prev, [exp.id]: "✓ No grammar issues found." }));
+          return;
+        }
+        setGeneratedSummaries((prev) => ({
+          ...prev,
+          [exp.id]: grammarResult.text || "",
+        }));
+      } catch (err) {
+        setLlmErrors((prev) => ({ ...prev, [exp.id]: (err as Error).message }));
+      } finally {
+        setIsGenerating((prev) => ({ ...prev, [exp.id]: false }));
+      }
+    },
+    [ensureProvider, redaction.stripContactInfo],
+  );
+
+  const handleGenerateHighlights = useCallback(
+    async (exp: WorkExperience) => {
+      const result = ensureProvider();
+      setLlmErrors((prev) => ({ ...prev, [exp.id]: "" }));
+      setGeneratedHighlights((prev) => ({ ...prev, [exp.id]: [] }));
+      if ("error" in result) {
+        setLlmErrors((prev) => ({ ...prev, [exp.id]: result.error }));
+        return;
+      }
+      setIsGenerating((prev) => ({ ...prev, [exp.id]: true }));
+      try {
+        const prompt = buildHighlightsPrompt("work experience", buildInput(exp));
+        const output = await result.provider.generateText(result.apiKey, {
+          prompt,
+          temperature: 0.5,
+          maxTokens: 256,
+        });
+        const bullets = output
+          .split("\n")
+          .map((line) => line.replace(/^[-•]\s*/, "").trim())
+          .filter(Boolean);
+        setGeneratedHighlights((prev) => ({ ...prev, [exp.id]: bullets }));
+      } catch (err) {
+        setLlmErrors((prev) => ({ ...prev, [exp.id]: (err as Error).message }));
+      } finally {
+        setIsGenerating((prev) => ({ ...prev, [exp.id]: false }));
+      }
+    },
+    [buildInput, ensureProvider],
   );
 
   return (
@@ -219,7 +422,41 @@ export function WorkForm({ data, onChange }: WorkFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor={`summary-${exp.id}`}>Description</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor={`summary-${exp.id}`}>Description</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleGenerateSummary(exp)}
+                  disabled={isGenerating[exp.id]}
+                >
+                  {isGenerating[exp.id] ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  Generate
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleImproveSummary(exp)}
+                  disabled={isGenerating[exp.id]}
+                >
+                  Improve
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleGrammarSummary(exp)}
+                  disabled={isGenerating[exp.id]}
+                >
+                  Grammar
+                </Button>
+              </div>
               <RichTextEditor
                 id={`summary-${exp.id}`}
                 placeholder="Brief description of your role and responsibilities..."
@@ -227,21 +464,124 @@ export function WorkForm({ data, onChange }: WorkFormProps) {
                 value={exp.summary}
                 onChange={(value) => updateExperience(exp.id, "summary", value)}
               />
+              {llmErrors[exp.id] ? (
+                <p className="text-xs text-destructive">{llmErrors[exp.id]}</p>
+              ) : null}
+              {generatedSummaries[exp.id] ? (
+                <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Generated Summary
+                  </p>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {generatedSummaries[exp.id]}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        updateExperience(exp.id, "summary", generatedSummaries[exp.id]);
+                        setGeneratedSummaries((prev) => ({ ...prev, [exp.id]: "" }));
+                      }}
+                    >
+                      Apply
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleGenerateSummary(exp)}
+                      disabled={isGenerating[exp.id]}
+                    >
+                      Regenerate
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setGeneratedSummaries((prev) => ({ ...prev, [exp.id]: "" }))
+                      }
+                    >
+                      Discard
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Key Achievements</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => addHighlight(exp.id)}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleGenerateHighlights(exp)}
+                    disabled={isGenerating[exp.id]}
+                  >
+                    {isGenerating[exp.id] ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3.5 w-3.5" />
+                    )}
+                    Generate
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => addHighlight(exp.id)}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add
+                  </Button>
+                </div>
               </div>
+              {generatedHighlights[exp.id]?.length ? (
+                <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Generated Highlights
+                  </p>
+                  <ul className="text-sm list-disc pl-5 space-y-1">
+                    {generatedHighlights[exp.id].map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                  </ul>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        updateExperience(exp.id, "highlights", generatedHighlights[exp.id]);
+                        setGeneratedHighlights((prev) => ({ ...prev, [exp.id]: [] }));
+                      }}
+                    >
+                      Apply
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleGenerateHighlights(exp)}
+                      disabled={isGenerating[exp.id]}
+                    >
+                      Regenerate
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setGeneratedHighlights((prev) => ({ ...prev, [exp.id]: [] }))
+                      }
+                    >
+                      Discard
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
               <div className="space-y-2">
                 {exp.highlights.map((highlight, hIndex) => (
                   <div key={hIndex} className="flex items-center gap-2">

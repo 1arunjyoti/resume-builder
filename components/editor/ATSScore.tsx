@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,8 +22,25 @@ import {
   Trophy,
   Info,
   AlertTriangle,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLLMSettingsStore } from "@/store/useLLMSettingsStore";
+import { ensureLLMProvider } from "@/lib/llm/ensure-provider";
+import { buildATSAnalysisPrompt } from "@/lib/llm/prompts";
+import { redactContactInfo } from "@/lib/llm/redaction";
+
+interface AIATSAnalysis {
+  score: number;
+  strengths: string[];
+  criticalIssues: string[];
+  improvements: string[];
+  keywordSuggestions: string[];
+  formatIssues: string[];
+  summaryFeedback: string;
+  bulletFeedback: { original: string; improved: string; reason: string }[];
+}
 
 interface ATSScoreProps {
   resume: Resume | null;
@@ -98,11 +115,120 @@ function CheckItem({ check }: { check: ATSCheck }) {
 export function ATSScore({ resume, className }: ATSScoreProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
+  const [aiAnalysis, setAiAnalysis] = useState<AIATSAnalysis | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
+
+  const providerId = useLLMSettingsStore((state) => state.providerId);
+  const apiKeys = useLLMSettingsStore((state) => state.apiKeys);
+  const consent = useLLMSettingsStore((state) => state.consent);
+  const redaction = useLLMSettingsStore((state) => state.redaction);
 
   const scoreResult = useMemo(() => {
     if (!resume) return null;
     return calculateATSScore(resume, jobDescription);
   }, [resume, jobDescription]);
+
+  const buildResumeText = useCallback(() => {
+    if (!resume) return "";
+    const parts: string[] = [];
+    if (resume.basics.name) parts.push(`Name: ${resume.basics.name}`);
+    if (resume.basics.label) parts.push(`Title: ${resume.basics.label}`);
+    if (resume.basics.summary) parts.push(`Summary: ${resume.basics.summary}`);
+    if (resume.skills.length) {
+      parts.push(`Skills: ${resume.skills.map((s) => [s.name, ...s.keywords].filter(Boolean).join(": ")).join(" | ")}`);
+    }
+    if (resume.work.length) {
+      resume.work.forEach((w) => {
+        const line = [`${w.position} at ${w.company}`, w.summary, ...(w.highlights || [])].filter(Boolean).join(" | ");
+        parts.push(`Work: ${line}`);
+      });
+    }
+    if (resume.education.length) {
+      resume.education.forEach((e) => {
+        parts.push(`Education: ${[e.studyType, e.area, e.institution].filter(Boolean).join(" | ")}`);
+      });
+    }
+    if (resume.projects.length) {
+      resume.projects.forEach((p) => {
+        const line = [p.name, p.description, ...(p.highlights || [])].filter(Boolean).join(" | ");
+        parts.push(`Project: ${line}`);
+      });
+    }
+    if (resume.certificates.length) {
+      parts.push(`Certificates: ${resume.certificates.map((c) => [c.name, c.issuer].filter(Boolean).join(" from ")).join(", ")}`);
+    }
+    const raw = parts.join("\n");
+    return redaction.stripContactInfo ? redactContactInfo(raw) : raw;
+  }, [resume, redaction.stripContactInfo]);
+
+  const parseLLMOutput = useCallback((output: string) => {
+    const trimmed = output.trim();
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      const codeBlockMatch = trimmed.match(/```json\s*([\s\S]*?)```/i);
+      if (codeBlockMatch?.[1]) {
+        try { return JSON.parse(codeBlockMatch[1].trim()); } catch { /* fall through */ }
+      }
+      const start = trimmed.indexOf("{");
+      const end = trimmed.lastIndexOf("}");
+      if (start !== -1 && end !== -1 && end > start) {
+        try { return JSON.parse(trimmed.slice(start, end + 1)); } catch { /* fall through */ }
+      }
+      return null;
+    }
+  }, []);
+
+  const handleAIAnalysis = useCallback(async () => {
+    setAiError(null);
+    setAiAnalysis(null);
+
+    const result = ensureLLMProvider({
+      providerId,
+      apiKeys,
+      consent,
+      requiredConsent: "analysis",
+    });
+    if ("error" in result) {
+      setAiError(result.error);
+      return;
+    }
+
+    setIsAiAnalyzing(true);
+    try {
+      const resumeText = buildResumeText();
+      const jd = jobDescription.trim()
+        ? (redaction.stripContactInfo ? redactContactInfo(jobDescription) : jobDescription)
+        : undefined;
+      const output = await result.provider.generateText(result.apiKey, {
+        prompt: buildATSAnalysisPrompt(resumeText, jd),
+        temperature: 0.3,
+        maxTokens: 1024,
+      });
+      const parsed = parseLLMOutput(output);
+      if (!parsed) {
+        setAiError("Failed to parse AI response. Try again.");
+        return;
+      }
+      setAiAnalysis({
+        score: typeof parsed.score === "number" ? parsed.score : 0,
+        strengths: Array.isArray(parsed.strengths) ? parsed.strengths.map(String) : [],
+        criticalIssues: Array.isArray(parsed.criticalIssues) ? parsed.criticalIssues.map(String) : [],
+        improvements: Array.isArray(parsed.improvements) ? parsed.improvements.map(String) : [],
+        keywordSuggestions: Array.isArray(parsed.keywordSuggestions) ? parsed.keywordSuggestions.map(String) : [],
+        formatIssues: Array.isArray(parsed.formatIssues) ? parsed.formatIssues.map(String) : [],
+        summaryFeedback: typeof parsed.summaryFeedback === "string" ? parsed.summaryFeedback : "",
+        bulletFeedback: Array.isArray(parsed.bulletFeedback)
+          ? parsed.bulletFeedback.filter((b: unknown) => b && typeof b === "object")
+          : [],
+      });
+    } catch (err) {
+      setAiError((err as Error).message);
+    } finally {
+      setIsAiAnalyzing(false);
+    }
+  }, [apiKeys, buildResumeText, consent, jobDescription, parseLLMOutput, providerId, redaction.stripContactInfo]);
 
   const scoreStartColor = (score: number) => {
     if (score >= 80) return "text-green-600";
@@ -125,7 +251,7 @@ export function ATSScore({ resume, className }: ATSScoreProps) {
           variant="outline"
           size="sm"
           className={cn(
-            "text-primary border-primary/30 hover:bg-primary/10 gap-2 relative",
+            "text-primary border-primary/20 hover:bg-primary/10 gap-2 relative",
             className,
           )}
         >
@@ -188,7 +314,151 @@ export function ATSScore({ resume, className }: ATSScoreProps) {
               onChange={(e) => setJobDescription(e.target.value)}
               className="min-h-25 text-sm resize-y"
             />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleAIAnalysis}
+              disabled={isAiAnalyzing}
+              className="gap-2"
+            >
+              {isAiAnalyzing ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="size-3.5" />
+              )}
+              AI Deep Analysis
+            </Button>
           </div>
+
+          {/* AI Analysis Panel */}
+          {(aiAnalysis || aiError) && (
+            <div className="rounded-xl border bg-linear-to-b from-purple-50/50 to-background dark:from-purple-900/10 p-4 space-y-4">
+              <h4 className="font-medium text-sm flex items-center gap-2">
+                <Sparkles className="size-4 text-purple-500" />
+                AI-Powered Analysis
+                {aiAnalysis && aiAnalysis.score > 0 && (
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "ml-auto",
+                      aiAnalysis.score >= 80
+                        ? "text-green-600 border-green-300"
+                        : aiAnalysis.score >= 60
+                          ? "text-yellow-600 border-yellow-300"
+                          : "text-red-600 border-red-300"
+                    )}
+                  >
+                    AI Score: {aiAnalysis.score}/100
+                  </Badge>
+                )}
+              </h4>
+
+              {aiError && (
+                <p className="text-sm text-destructive">{aiError}</p>
+              )}
+
+              {aiAnalysis && (
+                <>
+                  {/* Summary Feedback */}
+                  {aiAnalysis.summaryFeedback && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Summary Feedback</p>
+                      <p className="text-sm text-muted-foreground">{aiAnalysis.summaryFeedback}</p>
+                    </div>
+                  )}
+
+                  {/* Critical Issues */}
+                  {aiAnalysis.criticalIssues.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold text-red-600 uppercase tracking-wider flex items-center gap-1">
+                        <AlertCircle className="size-3" />
+                        Critical Issues
+                      </p>
+                      <ul className="space-y-1">
+                        {aiAnalysis.criticalIssues.map((issue, i) => (
+                          <li key={i} className="text-xs text-red-700 dark:text-red-300 flex gap-1.5">
+                            <span className="text-red-500 shrink-0">•</span>
+                            {issue}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Strengths */}
+                  {aiAnalysis.strengths.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold text-green-600 uppercase tracking-wider flex items-center gap-1">
+                        <CheckCircle className="size-3" />
+                        Strengths
+                      </p>
+                      <ul className="space-y-1">
+                        {aiAnalysis.strengths.map((s, i) => (
+                          <li key={i} className="text-xs text-green-700 dark:text-green-300 flex gap-1.5">
+                            <span className="text-green-500 shrink-0">•</span>
+                            {s}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Improvements */}
+                  {aiAnalysis.improvements.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ranked Improvements</p>
+                      <ol className="space-y-1 list-decimal list-inside">
+                        {aiAnalysis.improvements.map((imp, i) => (
+                          <li key={i} className="text-xs text-muted-foreground">{imp}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+
+                  {/* Keyword Suggestions */}
+                  {aiAnalysis.keywordSuggestions.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Suggested Keywords</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {aiAnalysis.keywordSuggestions.map((kw, i) => (
+                          <Badge key={i} variant="secondary" className="text-xs">{kw}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Format Issues */}
+                  {aiAnalysis.formatIssues.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Format Issues</p>
+                      <ul className="space-y-1">
+                        {aiAnalysis.formatIssues.map((fi, i) => (
+                          <li key={i} className="text-xs text-muted-foreground flex gap-1.5">
+                            <Info className="size-3 shrink-0 mt-0.5" />
+                            {fi}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Bullet Rewrites */}
+                  {aiAnalysis.bulletFeedback.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Bullet Rewrites</p>
+                      {aiAnalysis.bulletFeedback.map((bf, i) => (
+                        <div key={i} className="rounded border p-2 space-y-1 text-xs">
+                          <div className="text-red-600 dark:text-red-400 line-through">{bf.original}</div>
+                          <div className="text-green-600 dark:text-green-400">{bf.improved}</div>
+                          <div className="text-muted-foreground italic">{bf.reason}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           {scoreResult && (
             <div className="grid gap-6 py-4 lg:grid-cols-[320px,1fr]">

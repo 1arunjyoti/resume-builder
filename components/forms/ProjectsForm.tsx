@@ -4,11 +4,21 @@ import { useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { FolderGit2, Plus, Trash2, X } from "lucide-react";
+import { FolderGit2, Plus, Sparkles, Trash2, X, Loader2 } from "lucide-react";
 import type { Project } from "@/db";
 import { v4 as uuidv4 } from "uuid";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import { useLLMSettingsStore } from "@/store/useLLMSettingsStore";
+import { ensureLLMProvider } from "@/lib/llm/ensure-provider";
+import {
+  buildHighlightsPrompt,
+  buildSectionSummaryPrompt,
+  buildRewritePrompt,
+  buildGrammarPrompt,
+} from "@/lib/llm/prompts";
+import { processGrammarOutput } from "@/lib/llm/grammar";
+import { redactContactInfo } from "@/lib/llm/redaction";
 
 interface ProjectsFormProps {
   data: Project[];
@@ -17,6 +27,15 @@ interface ProjectsFormProps {
 
 export function ProjectsForm({ data, onChange }: ProjectsFormProps) {
   const [newKeyword, setNewKeyword] = useState<{ [key: string]: string }>({});
+  const providerId = useLLMSettingsStore((state) => state.providerId);
+  const apiKeys = useLLMSettingsStore((state) => state.apiKeys);
+  const consent = useLLMSettingsStore((state) => state.consent);
+  const redaction = useLLMSettingsStore((state) => state.redaction);
+  const tone = useLLMSettingsStore((state) => state.tone);
+  const [generatedDescriptions, setGeneratedDescriptions] = useState<Record<string, string>>({});
+  const [generatedHighlights, setGeneratedHighlights] = useState<Record<string, string[]>>({});
+  const [llmErrors, setLlmErrors] = useState<Record<string, string>>({});
+  const [isGenerating, setIsGenerating] = useState<Record<string, boolean>>({});
 
   const addProject = useCallback(() => {
     const newProject: Project = {
@@ -140,6 +159,190 @@ export function ProjectsForm({ data, onChange }: ProjectsFormProps) {
     [addKeyword],
   );
 
+  const buildInput = useCallback(
+    (proj: Project) => {
+      const peerContext = data
+        .filter((item) => item.id !== proj.id)
+        .slice(0, 3)
+        .map((item) =>
+          [
+            item.name ? `Project: ${item.name}` : "",
+            item.description ? `Description: ${item.description}` : "",
+            item.keywords.length ? `Tech: ${item.keywords.join(", ")}` : "",
+          ]
+            .filter(Boolean)
+            .join(" | "),
+        )
+        .filter(Boolean);
+
+      const parts = [
+        proj.name ? `Project: ${proj.name}` : "",
+        proj.url ? `URL: ${proj.url}` : "",
+        proj.description ? `Current Description: ${proj.description}` : "",
+        proj.keywords.length ? `Tech: ${proj.keywords.join(", ")}` : "",
+        peerContext.length ? `Other Projects:\n${peerContext.join("\n")}` : "",
+      ].filter(Boolean);
+      const raw = parts.join("\n");
+      return redaction.stripContactInfo ? redactContactInfo(raw) : raw;
+    },
+    [data, redaction.stripContactInfo],
+  );
+
+  const ensureProvider = useCallback((requiredConsent: "generation" | "rewriting" | null = "generation") => {
+    return ensureLLMProvider({
+      providerId,
+      apiKeys,
+      consent,
+      requiredConsent,
+    });
+  }, [apiKeys, consent, providerId]);
+
+  const handleGenerateDescription = useCallback(
+    async (proj: Project) => {
+      const result = ensureProvider("generation");
+      setLlmErrors((prev) => ({ ...prev, [proj.id]: "" }));
+      setGeneratedDescriptions((prev) => ({ ...prev, [proj.id]: "" }));
+      if ("error" in result) {
+        setLlmErrors((prev) => ({ ...prev, [proj.id]: result.error }));
+        return;
+      }
+      setIsGenerating((prev) => ({ ...prev, [proj.id]: true }));
+      try {
+        const prompt = buildSectionSummaryPrompt("project", buildInput(proj));
+        const output = await result.provider.generateText(result.apiKey, {
+          prompt,
+          temperature: 0.5,
+          maxTokens: 256,
+        });
+        setGeneratedDescriptions((prev) => ({ ...prev, [proj.id]: output }));
+      } catch (err) {
+        setLlmErrors((prev) => ({ ...prev, [proj.id]: (err as Error).message }));
+      } finally {
+        setIsGenerating((prev) => ({ ...prev, [proj.id]: false }));
+      }
+    },
+    [buildInput, ensureProvider],
+  );
+
+  const handleImproveDescription = useCallback(
+    async (proj: Project) => {
+      setLlmErrors((prev) => ({ ...prev, [proj.id]: "" }));
+      setGeneratedDescriptions((prev) => ({ ...prev, [proj.id]: "" }));
+      if (!proj.description?.trim()) {
+        setLlmErrors((prev) => ({
+          ...prev,
+          [proj.id]: "Add a description before improving it.",
+        }));
+        return;
+      }
+      const result = ensureProvider("rewriting");
+      if ("error" in result) {
+        setLlmErrors((prev) => ({ ...prev, [proj.id]: result.error }));
+        return;
+      }
+      setIsGenerating((prev) => ({ ...prev, [proj.id]: true }));
+      try {
+        const raw = redaction.stripContactInfo
+          ? redactContactInfo(proj.description)
+          : proj.description;
+        const context = buildInput(proj);
+        const prompt = buildRewritePrompt("project description", raw, tone, context);
+        const output = await result.provider.generateText(result.apiKey, {
+          prompt,
+          temperature: 0.4,
+          maxTokens: 256,
+        });
+        setGeneratedDescriptions((prev) => ({ ...prev, [proj.id]: output }));
+      } catch (err) {
+        setLlmErrors((prev) => ({ ...prev, [proj.id]: (err as Error).message }));
+      } finally {
+        setIsGenerating((prev) => ({ ...prev, [proj.id]: false }));
+      }
+    },
+    [buildInput, ensureProvider, redaction.stripContactInfo, tone],
+  );
+
+  const handleGrammarDescription = useCallback(
+    async (proj: Project) => {
+      setLlmErrors((prev) => ({ ...prev, [proj.id]: "" }));
+      setGeneratedDescriptions((prev) => ({ ...prev, [proj.id]: "" }));
+      if (!proj.description?.trim()) {
+        setLlmErrors((prev) => ({
+          ...prev,
+          [proj.id]: "Add a description before checking grammar.",
+        }));
+        return;
+      }
+      const result = ensureProvider("rewriting");
+      if ("error" in result) {
+        setLlmErrors((prev) => ({ ...prev, [proj.id]: result.error }));
+        return;
+      }
+      setIsGenerating((prev) => ({ ...prev, [proj.id]: true }));
+      try {
+        const raw = redaction.stripContactInfo
+          ? redactContactInfo(proj.description)
+          : proj.description;
+        const prompt = buildGrammarPrompt("project description", raw);
+        const output = await result.provider.generateText(result.apiKey, {
+          prompt,
+          temperature: 0.2,
+          maxTokens: 256,
+        });
+        const grammarResult = processGrammarOutput(raw, output);
+        if (grammarResult.error) {
+          const errMsg = grammarResult.error;
+          setLlmErrors((prev) => ({ ...prev, [proj.id]: errMsg }));
+          return;
+        }
+        if (grammarResult.noChanges) {
+          setLlmErrors((prev) => ({ ...prev, [proj.id]: "✓ No grammar issues found." }));
+          return;
+        }
+        setGeneratedDescriptions((prev) => ({
+          ...prev,
+          [proj.id]: grammarResult.text || "",
+        }));
+      } catch (err) {
+        setLlmErrors((prev) => ({ ...prev, [proj.id]: (err as Error).message }));
+      } finally {
+        setIsGenerating((prev) => ({ ...prev, [proj.id]: false }));
+      }
+    },
+    [ensureProvider, redaction.stripContactInfo],
+  );
+
+  const handleGenerateHighlights = useCallback(
+    async (proj: Project) => {
+      const result = ensureProvider();
+      setLlmErrors((prev) => ({ ...prev, [proj.id]: "" }));
+      setGeneratedHighlights((prev) => ({ ...prev, [proj.id]: [] }));
+      if ("error" in result) {
+        setLlmErrors((prev) => ({ ...prev, [proj.id]: result.error }));
+        return;
+      }
+      setIsGenerating((prev) => ({ ...prev, [proj.id]: true }));
+      try {
+        const prompt = buildHighlightsPrompt("project", buildInput(proj));
+        const output = await result.provider.generateText(result.apiKey, {
+          prompt,
+          temperature: 0.5,
+          maxTokens: 256,
+        });
+        const bullets = output
+          .split("\n")
+          .map((line) => line.replace(/^[-•]\s*/, "").trim())
+          .filter(Boolean);
+        setGeneratedHighlights((prev) => ({ ...prev, [proj.id]: bullets }));
+      } catch (err) {
+        setLlmErrors((prev) => ({ ...prev, [proj.id]: (err as Error).message }));
+      } finally {
+        setIsGenerating((prev) => ({ ...prev, [proj.id]: false }));
+      }
+    },
+    [buildInput, ensureProvider],
+  );
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -243,7 +446,41 @@ export function ProjectsForm({ data, onChange }: ProjectsFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor={`description-${proj.id}`}>Description</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor={`description-${proj.id}`}>Description</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleGenerateDescription(proj)}
+                  disabled={isGenerating[proj.id]}
+                >
+                  {isGenerating[proj.id] ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  Generate
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleImproveDescription(proj)}
+                  disabled={isGenerating[proj.id]}
+                >
+                  Improve
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleGrammarDescription(proj)}
+                  disabled={isGenerating[proj.id]}
+                >
+                  Grammar
+                </Button>
+              </div>
               <RichTextEditor
                 id={`description-${proj.id}`}
                 placeholder="Brief description of the project..."
@@ -253,6 +490,50 @@ export function ProjectsForm({ data, onChange }: ProjectsFormProps) {
                   updateProject(proj.id, "description", value)
                 }
               />
+              {llmErrors[proj.id] ? (
+                <p className="text-xs text-destructive">{llmErrors[proj.id]}</p>
+              ) : null}
+              {generatedDescriptions[proj.id] ? (
+                <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Generated Description
+                  </p>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {generatedDescriptions[proj.id]}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        updateProject(proj.id, "description", generatedDescriptions[proj.id]);
+                        setGeneratedDescriptions((prev) => ({ ...prev, [proj.id]: "" }));
+                      }}
+                    >
+                      Apply
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleGenerateDescription(proj)}
+                      disabled={isGenerating[proj.id]}
+                    >
+                      Regenerate
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setGeneratedDescriptions((prev) => ({ ...prev, [proj.id]: "" }))
+                      }
+                    >
+                      Discard
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -306,16 +587,75 @@ export function ProjectsForm({ data, onChange }: ProjectsFormProps) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Key Features / Highlights</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => addHighlight(proj.id)}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleGenerateHighlights(proj)}
+                    disabled={isGenerating[proj.id]}
+                  >
+                    {isGenerating[proj.id] ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3.5 w-3.5" />
+                    )}
+                    Generate
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => addHighlight(proj.id)}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add
+                  </Button>
+                </div>
               </div>
+              {generatedHighlights[proj.id]?.length ? (
+                <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Generated Highlights
+                  </p>
+                  <ul className="text-sm list-disc pl-5 space-y-1">
+                    {generatedHighlights[proj.id].map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                  </ul>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        updateProject(proj.id, "highlights", generatedHighlights[proj.id]);
+                        setGeneratedHighlights((prev) => ({ ...prev, [proj.id]: [] }));
+                      }}
+                    >
+                      Apply
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleGenerateHighlights(proj)}
+                      disabled={isGenerating[proj.id]}
+                    >
+                      Regenerate
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setGeneratedHighlights((prev) => ({ ...prev, [proj.id]: [] }))
+                      }
+                    >
+                      Discard
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
               <div className="space-y-2">
                 {proj.highlights.map((highlight, hIndex) => (
                   <div key={hIndex} className="flex items-center gap-2">

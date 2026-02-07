@@ -78,7 +78,11 @@ import { DisclaimerDialog } from "@/components/DisclaimerDialog";
 import { Separator } from "@/components/ui/separator";
 import { ImportDialog } from "@/components/ImportDialog";
 import { ImportReview } from "@/components/ImportReview";
-import { importService, type ImportResult, type ParsedResumeData } from "@/lib/import";
+import {
+  importService,
+  type ImportResult,
+  type ParsedResumeData,
+} from "@/lib/import";
 
 // Moved outside component to prevent recreation on every render
 const EDITOR_TABS = [
@@ -160,7 +164,6 @@ function EditorContent() {
     URL.revokeObjectURL(url);
   }, [currentResume]);
 
-
   const handleImportResume = useCallback(() => {
     setImportDialogOpen(true);
   }, []);
@@ -179,7 +182,7 @@ function EditorContent() {
       setImportReviewOpen(false);
       setImportResult(null);
     },
-    [currentResume, updateCurrentResume]
+    [currentResume, updateCurrentResume],
   );
 
   const handleImportCancel = useCallback(() => {
@@ -278,14 +281,14 @@ function EditorContent() {
         className="hidden"
         onChange={handleFileChange}
       />
-      
+
       {/* Import Dialogs */}
       <ImportDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
         onImportComplete={handleImportComplete}
       />
-      
+
       {importResult && (
         <ImportReview
           open={importReviewOpen}
@@ -364,7 +367,7 @@ function EditorContent() {
                 variant="outline"
                 size="sm"
                 onClick={handleFillSampleData}
-                className="text-primary border-primary/30 hover:bg-primary/10"
+                className="text-primary border-primary/20 hover:bg-primary/10"
               >
                 <Wand2 className="h-4 w-4" />
                 Fill Sample
@@ -374,7 +377,7 @@ function EditorContent() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-primary border-primary/30 hover:bg-primary/10 gap-2"
+                    className="text-primary border-primary/20 hover:bg-primary/10 gap-2"
                   >
                     <FileJson className="h-4 w-4" />
                     Import / Export
@@ -393,8 +396,19 @@ function EditorContent() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <Button
+                variant="outline"
                 size="sm"
-                variant="ghost"
+                asChild
+                className="text-primary border-primary/20 hover:bg-primary/10"
+              >
+                <Link href="/settings">
+                  <Settings className="h-4 w-4" />
+                  LLM Settings
+                </Link>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={handleSave}
                 disabled={isSaving}
               >
@@ -552,6 +566,16 @@ function EditorContent() {
                           resume={currentResume}
                           className="w-full justify-start h-10 px-4 bg-background border-primary/10"
                         />
+                        <Button
+                          variant="outline"
+                          className="justify-start w-full h-10"
+                          asChild
+                        >
+                          <Link href="/settings">
+                            <Settings className="h-4 w-4" />
+                            LLM Settings
+                          </Link>
+                        </Button>
 
                         <Button
                           variant="outline"

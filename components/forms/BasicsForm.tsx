@@ -5,12 +5,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, User, Camera, X, Loader2 } from "lucide-react";
+import { Plus, Trash2, User, Camera, X, Loader2, Sparkles } from "lucide-react";
 import type { ResumeBasics } from "@/db";
 import { useCallback, useRef, useState } from "react";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { compressImage, validateImageFile } from "@/lib/image-utils";
+import { useLLMSettingsStore } from "@/store/useLLMSettingsStore";
+import { ensureLLMProvider } from "@/lib/llm/ensure-provider";
+import {
+  buildSummaryPrompt,
+  buildRewritePrompt,
+  buildGrammarPrompt,
+} from "@/lib/llm/prompts";
+import { processGrammarOutput } from "@/lib/llm/grammar";
+import { redactContactInfo } from "@/lib/llm/redaction";
 
 // Moved outside component to prevent recreation on every render
 const SOCIAL_NETWORKS = [
@@ -33,6 +42,15 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
   const [isCompressing, setIsCompressing] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
   const [imageSizeKB, setImageSizeKB] = useState<number | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedSummary, setGeneratedSummary] = useState("");
+  const [llmError, setLlmError] = useState<string | null>(null);
+
+  const providerId = useLLMSettingsStore((state) => state.providerId);
+  const apiKeys = useLLMSettingsStore((state) => state.apiKeys);
+  const consent = useLLMSettingsStore((state) => state.consent);
+  const redaction = useLLMSettingsStore((state) => state.redaction);
+  const tone = useLLMSettingsStore((state) => state.tone);
 
   const updateField = useCallback(
     <K extends keyof ResumeBasics>(field: K, value: ResumeBasics[K]) => {
@@ -148,6 +166,191 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
     onChange({ ...data, profiles: newProfiles });
   };
 
+  /** Build context about the person for AI prompts */
+  const buildPersonContext = useCallback(() => {
+    const parts: string[] = [];
+    if (data.name) parts.push(`Full Name: ${data.name}`);
+    if (data.label) parts.push(`Professional Title: ${data.label}`);
+    if (data.location?.city || data.location?.country) {
+      parts.push(
+        `Location: ${[data.location?.city, data.location?.country]
+          .filter(Boolean)
+          .join(", ")}`,
+      );
+    }
+    if (data.email) parts.push(`Email: ${data.email}`);
+    if (data.url) parts.push(`Website: ${data.url}`);
+    if (data.profiles.length > 0) {
+      const profileInfo = data.profiles
+        .filter((p) => p.network || p.url)
+        .map((p) => `${p.network}: ${p.username || p.url}`)
+        .join(", ");
+      if (profileInfo) parts.push(`Profiles: ${profileInfo}`);
+    }
+    const raw = parts.join("\n");
+    return redaction.stripContactInfo ? redactContactInfo(raw) : raw;
+  }, [data, redaction.stripContactInfo]);
+
+  const buildSummaryInput = useCallback(() => {
+    const parts: string[] = [];
+    if (data.name) parts.push(`Name: ${data.name}`);
+    if (data.label) parts.push(`Title: ${data.label}`);
+    if (data.location?.city || data.location?.country) {
+      parts.push(
+        `Location: ${[data.location?.city, data.location?.country]
+          .filter(Boolean)
+          .join(", ")}`,
+      );
+    }
+    if (data.summary) parts.push(`Current Summary: ${data.summary}`);
+    const raw = parts.join("\n");
+    return redaction.stripContactInfo ? redactContactInfo(raw) : raw;
+  }, [data, redaction.stripContactInfo]);
+
+  const handleGenerateSummary = useCallback(async () => {
+    setLlmError(null);
+    setGeneratedSummary("");
+
+    const result = ensureLLMProvider({
+      providerId,
+      apiKeys,
+      consent,
+      requiredConsent: "generation",
+    });
+    if ("error" in result) {
+      setLlmError(result.error);
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const prompt = buildSummaryPrompt(buildSummaryInput());
+      const output = await result.provider.generateText(result.apiKey, {
+        prompt,
+        temperature: 0.5,
+        maxTokens: 256,
+      });
+      setGeneratedSummary(output);
+    } catch (err) {
+      setLlmError((err as Error).message);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [
+    apiKeys,
+    buildSummaryInput,
+    consent,
+    providerId,
+  ]);
+
+  const handleImproveSummary = useCallback(async () => {
+    setLlmError(null);
+    setGeneratedSummary("");
+
+    if (!data.summary?.trim()) {
+      setLlmError("Add a summary before improving it.");
+      return;
+    }
+
+    const result = ensureLLMProvider({
+      providerId,
+      apiKeys,
+      consent,
+      requiredConsent: "rewriting",
+    });
+    if ("error" in result) {
+      setLlmError(result.error);
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const raw = redaction.stripContactInfo
+        ? redactContactInfo(data.summary)
+        : data.summary;
+      const context = buildPersonContext();
+      const output = await result.provider.generateText(result.apiKey, {
+        prompt: buildRewritePrompt("summary", raw, tone, context),
+        temperature: 0.4,
+        maxTokens: 256,
+      });
+      setGeneratedSummary(output);
+    } catch (err) {
+      setLlmError((err as Error).message);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [
+    apiKeys,
+    buildPersonContext,
+    consent,
+    data.summary,
+    providerId,
+    redaction.stripContactInfo,
+    tone,
+  ]);
+
+  const handleGrammarSummary = useCallback(async () => {
+    setLlmError(null);
+    setGeneratedSummary("");
+
+    if (!data.summary?.trim()) {
+      setLlmError("Add a summary before checking grammar.");
+      return;
+    }
+
+    const result = ensureLLMProvider({
+      providerId,
+      apiKeys,
+      consent,
+      requiredConsent: "rewriting",
+    });
+    if ("error" in result) {
+      setLlmError(result.error);
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const raw = redaction.stripContactInfo
+        ? redactContactInfo(data.summary)
+        : data.summary;
+      const output = await result.provider.generateText(result.apiKey, {
+        prompt: buildGrammarPrompt("summary", raw),
+        temperature: 0.2,
+        maxTokens: 256,
+      });
+      const grammarResult = processGrammarOutput(raw, output);
+      if (grammarResult.error) {
+        const errMsg = grammarResult.error;
+        setLlmError(errMsg);
+        return;
+      }
+      if (grammarResult.noChanges) {
+        setLlmError("✓ No grammar issues found.");
+        return;
+      }
+      setGeneratedSummary(grammarResult.text || "");
+    } catch (err) {
+      setLlmError((err as Error).message);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [
+    apiKeys,
+    consent,
+    data.summary,
+    providerId,
+    redaction.stripContactInfo,
+  ]);
+
+  const handleApplySummary = useCallback(() => {
+    if (!generatedSummary) return;
+    updateField("summary", generatedSummary);
+    setGeneratedSummary("");
+    setLlmError(null);
+  }, [generatedSummary, updateField]);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -256,9 +459,43 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
           <div className="space-y-2">
             <div className="flex justify-between items-center mb-1">
               <Label htmlFor="summary">Description</Label>
-              <span className="text-xs text-muted-foreground">
-                {(data.summary || "").length} characters
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {(data.summary || "").length} characters
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateSummary}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  Generate
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleImproveSummary}
+                  disabled={isGenerating}
+                >
+                  Improve
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGrammarSummary}
+                  disabled={isGenerating}
+                >
+                  Grammar
+                </Button>
+              </div>
             </div>
             <RichTextEditor
               id="summary"
@@ -267,6 +504,45 @@ export function BasicsForm({ data, onChange }: BasicsFormProps) {
               placeholder="A brief summary of your professional background and career objectives..."
               minHeight="min-h-[60px]"
             />
+            {llmError ? (
+              <p className="text-xs text-destructive">{llmError}</p>
+            ) : null}
+            {generatedSummary ? (
+              <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Generated Summary
+                </p>
+                <p className="text-sm whitespace-pre-wrap">
+                  {generatedSummary}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleApplySummary}
+                  >
+                    Apply
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGenerateSummary}
+                    disabled={isGenerating}
+                  >
+                    Regenerate
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setGeneratedSummary("")}
+                  >
+                    Discard
+                  </Button>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </CollapsibleSection>
